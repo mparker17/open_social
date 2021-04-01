@@ -153,7 +153,7 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
  * @param bool $as_link
  *   True if you want the full link otherwise just a canonical URL string.
  *
- * @return string
+ * @return string|\Drupal\Core\Link|NULL
  *   the Url.
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
@@ -191,7 +191,7 @@ function _social_event_get_link_to_event_from_enrollment(int $event_enrollment_i
 function _social_event_get_name_from_enrollment($id) {
   $entity_storage = \Drupal::entityTypeManager()
     ->getStorage('event_enrollment');
-  /** @var \Drupal\social_event\Entity\EventEnrollment $entity */
+  /** @var \Drupal\social_event\Entity\EventEnrollment $enrollment */
   $enrollment = $entity_storage->load($id);
 
   // User is AN by default.
@@ -239,8 +239,8 @@ function _social_event_get_name_from_enrollment($id) {
 function _social_event_get_event_from_enrollment(int $event_enrollment_id) {
   $entity_storage = \Drupal::entityTypeManager()
     ->getStorage('event_enrollment');
-  /** @var \Drupal\social_event\Entity\EventEnrollment $entity */
   if ($entity = $entity_storage->load($event_enrollment_id)) {
+    /** @var \Drupal\social_event\Entity\EventEnrollment $entity */
     $event_id = $entity->getFieldValue('field_event', 'target_id');
     $storage = \Drupal::entityTypeManager()->getStorage('node');
     /** @var \Drupal\node\Entity\Node $event */

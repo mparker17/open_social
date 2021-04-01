@@ -52,14 +52,13 @@ function social_like_tokens($type, $tokens, array $data, array $options, Bubblea
     /** @var \Drupal\message\Entity\Message $message */
     $message = $data['message'];
     if ($vote = Vote::load($message->getFieldValue('field_message_related_object', 'target_id'))) {
-      /** @var \Drupal\votingapi\Entity\Vote $vote */
       foreach ($tokens as $name => $original) {
         switch ($name) {
 
           case 'liked_entity':
           case 'liked_content_type':
           case 'liked_entity_link_html':
-
+          /** @var \Drupal\votingapi\Entity\Vote $vote */
             $storage = \Drupal::entityTypeManager()->getStorage($vote->getVotedEntityType());
             $entity = $storage->load($vote->getVotedEntityId());
             $url_options = ['absolute' => TRUE];
@@ -143,13 +142,14 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
       if ($vote = Vote::load($message->getFieldValue('field_message_related_object', 'target_id'))) {
         /** @var \Drupal\votingapi\Entity\Vote $vote */
         $storage = \Drupal::entityTypeManager()->getStorage($vote->getVotedEntityType());
+        /** @var Drupal\Core\Entity\FieldableEntityInterface $voted_entity */
         $voted_entity = $storage->load($vote->getVotedEntityId());
         $url_options = ['absolute' => TRUE];
         $link = $voted_entity->toUrl('canonical', $url_options)->toString();
         $content_type = $voted_entity->getEntityTypeId();
         // We should only use the label of entities who have a label.
         if ($content_type === 'comment') {
-          /** @var \Drupal\comment\Entity\Comment $commented_entity */
+          /** @var \Drupal\comment\Entity\Comment $voted_entity */
           $commented_entity = $voted_entity->getCommentedEntity();
           $link = $commented_entity->toUrl('canonical', $url_options)->toString();
         }
