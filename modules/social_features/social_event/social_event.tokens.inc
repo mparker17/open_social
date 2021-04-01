@@ -153,7 +153,7 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
  * @param bool $as_link
  *   True if you want the full link otherwise just a canonical URL string.
  *
- * @return string|\Drupal\Core\Link|NULL
+ * @return string|NULL
  *   the Url.
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
