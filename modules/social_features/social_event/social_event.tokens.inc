@@ -153,7 +153,7 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
  * @param bool $as_link
  *   True if you want the full link otherwise just a canonical URL string.
  *
- * @return string|null
+ * @return string
  *   the Url.
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
@@ -161,17 +161,14 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
  * @throws \Drupal\Core\Entity\EntityMalformedException
  */
 function _social_event_get_link_to_event_from_enrollment(int $event_enrollment_id, bool $as_link = FALSE) {
-  $event = _social_event_get_event_from_enrollment($event_enrollment_id);
   // Check if the event still exists.
-  if ($event !== NULL) {
+  if ($event = _social_event_get_event_from_enrollment($event_enrollment_id)) {
     if ($as_link) {
       $url_string = $event->toUrl('canonical')->toString(TRUE);
       return $url_string->getGeneratedUrl();
     }
-
     return Link::fromTextAndUrl($event->getTitle(), $event->toUrl('canonical'))->toString();
   }
-
   return NULL;
 }
 
@@ -226,7 +223,7 @@ function _social_event_get_name_from_enrollment($id) {
 /**
  * Gets the event object from event enrollment ID.
  *
- * @param string $event_enrollment_id
+ * @param int $event_enrollment_id
  *   Event enrollment ID.
  *
  * @return \Drupal\node\Entity\Node
@@ -235,7 +232,7 @@ function _social_event_get_name_from_enrollment($id) {
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
-function _social_event_get_event_from_enrollment(string $event_enrollment_id) {
+function _social_event_get_event_from_enrollment(int $event_enrollment_id) {
   $entity_storage = \Drupal::entityTypeManager()
     ->getStorage('event_enrollment');
   /** @var \Drupal\social_event\Entity\EventEnrollment $entity */

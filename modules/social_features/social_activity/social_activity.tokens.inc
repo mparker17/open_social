@@ -70,7 +70,7 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
 
           // Prepare the preview information.
           $preview_info = [
-            '#theme' => 'message_entity_preview',
+            '#theme' => 'message_content_preview',
             '#author_name' => $author_name,
             '#date' => $date,
             '#summary' => $summary,
@@ -106,7 +106,7 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
 
             // Prepare the preview.
             $preview_info = [
-              '#theme' => 'message_entity_preview',
+              '#theme' => 'message_content_preview',
               '#author_name' => $author_name,
               '#date' => $date,
               '#summary' => $summary,
