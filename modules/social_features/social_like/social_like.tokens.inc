@@ -58,7 +58,7 @@ function social_like_tokens($type, $tokens, array $data, array $options, Bubblea
           case 'liked_entity':
           case 'liked_content_type':
           case 'liked_entity_link_html':
-          /** @var \Drupal\votingapi\Entity\Vote $vote */
+            /** @var \Drupal\votingapi\Entity\Vote $vote */
             $storage = \Drupal::entityTypeManager()->getStorage($vote->getVotedEntityType());
             $entity = $storage->load($vote->getVotedEntityId());
             $url_options = ['absolute' => TRUE];
