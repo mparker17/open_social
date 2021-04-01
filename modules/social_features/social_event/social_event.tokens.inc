@@ -56,7 +56,7 @@ function social_event_tokens($type, $tokens, array $data, array $options, Bubble
       switch ($name) {
         case 'event_iam_organizing':
           if (!empty($event_enrollment_id)) {
-            $link = _social_event_get_link_to_event_from_enrollment($event_enrollment_id, FALSE);
+            $link = _social_event_get_link_to_event_from_enrollment($event_enrollment_id);
             if ($link !== NULL) {
               $replacements[$original] = $link;
             }
@@ -160,7 +160,7 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  * @throws \Drupal\Core\Entity\EntityMalformedException
  */
-function _social_event_get_link_to_event_from_enrollment(int $event_enrollment_id, bool $as_link = FALSE): ?string {
+function _social_event_get_link_to_event_from_enrollment(int $event_enrollment_id, bool $as_link = FALSE) {
   $event = _social_event_get_event_from_enrollment($event_enrollment_id);
   // Check if the event still exists.
   if ($event !== NULL) {
