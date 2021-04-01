@@ -167,9 +167,13 @@ function _social_event_get_link_to_event_from_enrollment(int $event_enrollment_i
       $url_string = $event->toUrl('canonical')->toString(TRUE);
       return $url_string->getGeneratedUrl();
     }
-    return Link::fromTextAndUrl($event->getTitle(), $event->toUrl('canonical'))->toString();
+    else {
+      return Link::fromTextAndUrl($event->getTitle(), $event->toUrl('canonical'))->toString();
+    }
   }
-  return NULL;
+  else {
+    return NULL;
+  }
 }
 
 /**
@@ -226,7 +230,7 @@ function _social_event_get_name_from_enrollment($id) {
  * @param int $event_enrollment_id
  *   Event enrollment ID.
  *
- * @return \Drupal\node\Entity\Node
+ * @return \Drupal\node\Entity\Node|null
  *   Event object.
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
@@ -236,13 +240,11 @@ function _social_event_get_event_from_enrollment(int $event_enrollment_id) {
   $entity_storage = \Drupal::entityTypeManager()
     ->getStorage('event_enrollment');
   /** @var \Drupal\social_event\Entity\EventEnrollment $entity */
-  $entity = $entity_storage->load($event_enrollment_id);
-  if ($entity !== NULL) {
+  if ($entity = $entity_storage->load($event_enrollment_id)) {
     $event_id = $entity->getFieldValue('field_event', 'target_id');
     $storage = \Drupal::entityTypeManager()->getStorage('node');
     /** @var \Drupal\node\Entity\Node $event */
     $event = $storage->load($event_id);
-    return $event;
   }
-  return NULL;
+  return $event ?? NULL;
 }

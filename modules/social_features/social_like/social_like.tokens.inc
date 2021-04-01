@@ -51,8 +51,8 @@ function social_like_tokens($type, $tokens, array $data, array $options, Bubblea
   if ($type == 'social_like' && !empty($data['message'])) {
     /** @var \Drupal\message\Entity\Message $message */
     $message = $data['message'];
-    /** @var \Drupal\votingapi\Entity\Vote $vote */
     if ($vote = Vote::load($message->getFieldValue('field_message_related_object', 'target_id'))) {
+      /** @var \Drupal\votingapi\Entity\Vote $vote */
       foreach ($tokens as $name => $original) {
         switch ($name) {
 
@@ -94,6 +94,7 @@ function social_like_tokens($type, $tokens, array $data, array $options, Bubblea
 
                 // Let's make an exception for comments.
                 if ($content_type === 'comment') {
+                  /** @var \Drupal\comment\Entity\Comment $commented_entity */
                   $commented_entity = $entity->getCommentedEntity();
 
                   $url_options = ['absolute' => TRUE];
@@ -139,8 +140,8 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
     // Alter the [message:cta_button] token, and replace it with the rendered
     // content with new text and link.
     if (isset($context['tokens']['cta_button'])) {
-      /** @var \Drupal\votingapi\Entity\Vote $vote */
       if ($vote = Vote::load($message->getFieldValue('field_message_related_object', 'target_id'))) {
+        /** @var \Drupal\votingapi\Entity\Vote $vote */
         $storage = \Drupal::entityTypeManager()->getStorage($vote->getVotedEntityType());
         $voted_entity = $storage->load($vote->getVotedEntityId());
         $url_options = ['absolute' => TRUE];
@@ -148,7 +149,7 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
         $content_type = $voted_entity->getEntityTypeId();
         // We should only use the label of entities who have a label.
         if ($content_type === 'comment') {
-          /** @var \Drupal\Core\Entity\EntityBase $commented_entity */
+          /** @var \Drupal\comment\Entity\Comment $commented_entity */
           $commented_entity = $voted_entity->getCommentedEntity();
           $link = $commented_entity->toUrl('canonical', $url_options)->toString();
         }
