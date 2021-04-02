@@ -5,6 +5,7 @@
  * Builds placeholder replacement tokens for Social Group module.
  */
 
+use Drupal\user\UserInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Markup;
@@ -150,13 +151,12 @@ function social_group_tokens($type, $tokens, array $data, array $options, Bubble
  */
 function social_group_tokens_alter(array &$replacements, array $context, BubbleableMetadata $bubbleable_metadata) {
   if ($context['type'] == 'message' && !empty($context['data']['message'])) {
-    /** @var Drupal\message\Entity\Message $message */
-    $message = $context['data']['message'];
-
-    // Alter the [message:cta_button] token, and replace it with the rendered
-    // content with new text and link.
-    if (isset($context['tokens']['cta_button'])) {
-      if (!empty(isset($message->field_message_related_object))) {
+    // Alter the [message:cta_button] and [message:preview] token, and
+    // replace it with the rendered content with new text and link.
+    if (isset($context['tokens']['cta_button'])|| isset($context['tokens']['preview'])) {
+      /** @var Drupal\message\Entity\Message $message */
+      $message = $context['data']['message'];
+      if (isset($message->field_message_related_object)) {
         $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
         $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
 
@@ -170,18 +170,59 @@ function social_group_tokens_alter(array &$replacements, array $context, Bubblea
             $type = $group_content->getContentPlugin()->getPluginId();
             if ($type === 'group_membership') {
               $message_template_id = $message->getTemplate()->id();
-              $cta_button = [];
+              $link = $group_content->getGroup()->toUrl()->toString();
               switch ($message_template_id) {
                 case 'approve_request_join_group':
-                  $cta_button = [
-                    '#theme' => 'message_cta_button',
-                    '#link' => $group_content->getGroup()->toUrl()->toString(),
-                    '#text' => t('Explore the group'),
-                  ];
+                  if (isset($context['tokens']['cta_button'])) {
+                    $cta_button = [
+                      '#theme' => 'message_cta_button',
+                      '#link' => $link,
+                      '#text' => t('Explore the group'),
+                    ];
+                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                      ->renderPlain($cta_button);
+                  }
+                  // Replace the preview token.
+                  if (isset($context['tokens']['preview'])) {
+                    $view_builder = \Drupal::entityTypeManager()->getViewBuilder('group');
+                    $storage = \Drupal::entityTypeManager()->getStorage('group');
+                    $group = $storage->load($group_content->getGroup()->id());
+                    $build = $view_builder->view($group, 'small_teaser');
+                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($build);
+                  }
                   break;
-              }
-              if (!empty($cta_button)) {
-                $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
+
+                case 'join_to_group':
+                  if (isset($context['tokens']['cta_button'])) {
+                    $cta_button = [
+                      '#theme' => 'message_cta_button',
+                      '#link' => $link . '/members',
+                      '#text' => t('See all members'),
+                    ];
+                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                      ->renderPlain($cta_button);
+                  }
+                  // Replace the preview token.
+                  if (isset($context['tokens']['preview'])) {
+                    $user = $group_content->getEntity();
+                    if ($user instanceof UserInterface) {
+                      $entity_manager = \Drupal::entityTypeManager();
+                      /** @var \Drupal\profile\Entity\Profile $profile */
+                      $profile = $entity_manager->getStorage('profile')->loadByUser($user, 'profile');
+                      // Add the profile image.
+                      $preview_info = [
+                        '#theme' => 'message_user_profile_preview',
+                        '#profile_name' => $user->getDisplayName(),
+                        '#profile_home' => Url::fromRoute('entity.user.canonical', ['user' => $user->id()]),
+                        '#profile_image' => file_create_url($profile->get('field_profile_image')->entity->uri->value),
+                        '#profile_function' => $profile->getFieldValue('field_profile_function', 'value'),
+                        '#profile_organization' => $profile->getFieldValue('field_profile_organization', 'value'),
+                      ];
+                      $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
+                        ->renderPlain($preview_info);
+                    }
+                  }
+                  break;
               }
             }
           }

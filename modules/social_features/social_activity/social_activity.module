@@ -180,18 +180,33 @@ function social_activity_social_user_account_header_items_alter(array &$menu_lin
  */
 function social_activity_theme($existing, $type, $theme, $path) {
   return [
+    'message_post_comment_preview' => [
+      'variables' => [
+        'summary' => '',
+      ],
+    ],
     'message_content_preview' => [
       'variables' => [
         'link' => '',
         'author_name' => '',
         'date' => '',
-        'summary' => '',
+        'title' => '',
+        'type' => '',
       ],
     ],
     'message_cta_button' => [
       'variables' => [
         'link' => '',
         'text' => '',
+      ],
+    ],
+    'message_user_profile_preview' => [
+      'variables' => [
+        'profile_name' => '',
+        'profile_home' => '',
+        'profile_image' => '',
+        'profile_function' => '',
+        'profile_organization' => '',
       ],
     ],
   ];

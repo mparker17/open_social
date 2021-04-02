@@ -7,7 +7,6 @@
 
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Drupal\social_event\EventEnrollmentInterface;
 
 /**
@@ -49,8 +48,8 @@ function social_event_token_info() {
 function social_event_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
   $replacements = [];
   /** @var Drupal\message\Entity\Message $message */
-  $message = $data['message'];
-  if ($type === 'social_event' && !empty($message)) {
+  if ($type === 'social_event' && !empty($data['message'])) {
+    $message = $data['message'];
     $event_enrollment_id = $message->getFieldValue('field_message_related_object', 'target_id');
     foreach ($tokens as $name => $original) {
       switch ($name) {
@@ -98,47 +97,76 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
 
     // Alter the [message:cta_button] token, and replace it with the rendered
     // content with new text and link.
-    if (isset($context['tokens']['cta_button'])) {
-      if (!empty($event_enrollment_id = $message->getFieldValue('field_message_related_object', 'target_id'))) {
-        $link = _social_event_get_link_to_event_from_enrollment($event_enrollment_id, TRUE);
-        $message_template_id = $message->getTemplate()->id();
-        $cta_button = [];
-        switch ($message_template_id) {
-          case 'activity_on_events_im_organizing':
-            $cta_button = [
-              '#theme' => 'message_cta_button',
-              '#link' => $link . '/all-enrollments',
-              '#text' => t('View enrollments'),
-            ];
-            break;
+    if (isset($context['tokens']['cta_button'])|| isset($context['tokens']['preview'])) {
+      if (!empty($message->field_message_related_object)) {
+        $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
+        if ($target_type === 'event_enrollment' && $event_enrollment_id = $message->getFieldValue('field_message_related_object', 'target_id')) {
+          $link = _social_event_get_link_to_event_from_enrollment($event_enrollment_id, TRUE);
+          $message_template_id = $message->getTemplate()->id();
+          switch ($message_template_id) {
+            case 'activity_on_events_im_organizing':
+              if (isset($context['tokens']['cta_button'])) {
+                if ($link) {
+                  $cta_button = [
+                    '#theme' => 'message_cta_button',
+                    '#link' => $link . '/all-enrollments',
+                    '#text' => t('View enrollments'),
+                  ];
+                  $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                    ->renderPlain($cta_button);
+                }
+              }
+              break;
 
-          case 'request_event_enrollment':
-            $event = _social_event_get_event_from_enrollment($event_enrollment_id);
-            $link = Url::fromRoute('view.event_manage_enrollment_requests.page_manage_enrollment_requests', [
-              'arg_0' => $event->id(),
-            ],
-              [
-                'absolute' => TRUE,
-              ])->toString();
+            case 'request_event_enrollment':
+              if (isset($context['tokens']['cta_button'])) {
+                if ($link) {
+                  $cta_button = [
+                    '#theme' => 'message_cta_button',
+                    '#link' => $link . '/all-enrollment-requests',
+                    '#text' => t('View enrollment requests'),
+                  ];
+                  $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                    ->renderPlain($cta_button);
+                }
+              }
+              break;
 
-            $cta_button = [
-              '#theme' => 'message_cta_button',
-              '#link' => $link,
-              '#text' => t('View the requests'),
-            ];
-            break;
+            case 'member_added_by_event_organiser':
+            case 'event_request_approved':
+              if (isset($context['tokens']['cta_button'])) {
+                if ($link) {
+                  $cta_button = [
+                    '#theme' => 'message_cta_button',
+                    '#link' => $link,
+                    '#text' => t('See the event'),
+                  ];
+                  $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                    ->renderPlain($cta_button);
+                }
+              }
+              break;
+          }
+          // Replace the preview token.
+          if (isset($context['tokens']['preview'])) {
+            if ($event = _social_event_get_event_from_enrollment($event_enrollment_id)) {
+              $date_formatter = \Drupal::service('date.formatter');
+              $date_format = 'social_long_date';
 
-          case 'member_added_by_event_organiser':
-          case 'event_request_approved':
-            $cta_button = [
-              '#theme' => 'message_cta_button',
-              '#link' => $link,
-              '#text' => t('See the event'),
-            ];
-            break;
-        }
-        if (!empty($cta_button)) {
-          $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
+              // Prepare the preview.
+              $preview_info = [
+                '#theme' => 'message_content_preview',
+                '#author_name' => $event->getOwner()
+                  ->getDisplayName(),
+                '#date' => $date_formatter->format($event->getCreatedTime(), $date_format),
+                '#title' => $event->getTitle(),
+                '#type' => strtoupper($event->getType()),
+                '#link' => $link,
+              ];
+              $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
+                ->renderPlain($preview_info);
+            }
+          }
         }
       }
     }

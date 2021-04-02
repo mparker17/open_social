@@ -54,8 +54,6 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
 
         if ($target_type === 'post') {
           /** @var \Drupal\social_post\Entity\PostInterface $entity */
-          $author_name = $entity->getOwner()->getDisplayName();
-          $date = $date_formatter->format($entity->getCreatedTime(), $date_format);
 
           // Get the summary of the comment.
           if ($entity->hasField('field_post') && !$entity->field_post->isEmpty()) {
@@ -70,27 +68,18 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
 
           // Prepare the preview information.
           $preview_info = [
-            '#theme' => 'message_content_preview',
-            '#author_name' => $author_name,
-            '#date' => $date,
+            '#theme' => 'message_post_comment_preview',
             '#summary' => $summary,
-            '#link' => $link,
           ];
 
           // Prepare the CTA button markup.
           $cta_button = [
             '#theme' => 'message_cta_button',
             '#link' => $link,
-            '#text' => t('See the post'),
+            '#text' => t('Leave a comment'),
           ];
         }
         elseif ($target_type === 'group_content' && $entity instanceof GroupContentInterface) {
-          $group_content_type = $entity->getGroupContentType();
-
-          if ($group_content_type !== NULL) {
-            $entity_bundle_label = mb_strtolower($group_content_type->label());
-          }
-
           /** @var \Drupal\node\NodeInterface $node */
           $node = $entity->getEntity();
 
@@ -100,16 +89,13 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
               ['absolute' => TRUE]
             )->toString();
 
-            $author_name = $node->getOwner()->getDisplayName();
-            $date = $date_formatter->format($node->getCreatedTime(), $date_format);
-            $summary = $node->getTitle();
-
             // Prepare the preview.
             $preview_info = [
               '#theme' => 'message_content_preview',
-              '#author_name' => $author_name,
-              '#date' => $date,
-              '#summary' => $summary,
+              '#author_name' => $node->getOwner()->getDisplayName(),
+              '#date' => $date_formatter->format($node->getCreatedTime(), $date_format),
+              '#title' => $node->getTitle(),
+              '#type' => strtoupper($node->getType()),
               '#link' => $link,
             ];
 
@@ -117,9 +103,7 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
             $cta_button = [
               '#theme' => 'message_cta_button',
               '#link' => $link,
-              '#text' => t('Read more about this @entity_bundle_label', [
-                '@entity_bundle_label' => $entity_bundle_label,
-              ]),
+              '#text' => t('Read more'),
             ];
 
           }

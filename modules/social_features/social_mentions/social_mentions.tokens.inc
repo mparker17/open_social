@@ -173,7 +173,7 @@ function social_mentions_tokens_alter(array &$replacements, array $context, Bubb
     // Alter the [message:cta_button] token, and replace it with the rendered
     // content with new text and link.
     if (isset($context['tokens']['cta_button'])) {
-      if (!empty(isset($message->field_message_related_object))) {
+      if (isset($message->field_message_related_object)) {
         $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
         $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
 

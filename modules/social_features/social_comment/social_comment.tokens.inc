@@ -197,7 +197,7 @@ function social_comment_tokens($type, $tokens, array $data, array $options, Bubb
               ->load($target_id);
 
             if ($comment instanceof CommentInterface) {
-              /** @var \Drupal\Core\Entity\Entity $entity */
+              /** @var \Drupal\Core\Entity\EntityInterface $entity */
               $entity = $comment->getCommentedEntity();
               if (!empty($entity)) {
                 if ($entity instanceof PostInterface) {
@@ -259,49 +259,68 @@ function social_comment_tokens_alter(array &$replacements, array $context, Bubbl
 
     // Alter the [message:cta_button] token, and replace it with the rendered
     // content with new text and link.
-    if (isset($context['tokens']['cta_button'])) {
-      if (!empty(isset($message->field_message_related_object))) {
+    if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
+      if (isset($message->field_message_related_object)) {
         $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
         $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
 
+        /** @var Drupal\comment\Entity\Comment $comment */
         $comment = \Drupal::entityTypeManager()->getStorage($target_type)
           ->load($target_id);
 
         if ($comment instanceof CommentInterface && $commented_entity = $comment->getCommentedEntity()) {
-          /** @var \Drupal\Core\Entity\EntityInterface $commented_entity */
-          $commented_entity_type = $commented_entity->getEntityTypeId();
-          // A reply link for a post should go to the post view.
-          $link = NULL;
-          if ($commented_entity_type === 'post') {
-            $link = $commented_entity->toUrl('canonical', ['absolute' => TRUE])->toString();
-          }
-          else {
-            // For comments however it should go to comment reply page.
-            $link = Url::fromRoute('comment.reply', [
-              'entity_type' => $comment->getCommentedEntityTypeId(),
-              'entity' => $comment->getCommentedEntityId(),
-              'field_name' => $comment->getFieldName(),
-              'pid' => $comment->id(),
-            ])->toString();
-          }
-          if ($link) {
-            $message_template_id = $message->getTemplate()->id();
-            $cta_button = [];
-            switch ($message_template_id) {
-              case 'create_comment_author_node_post':
-              case 'create_comment_post_profile':
-              case 'create_comment_following_node':
-              case 'create_comment_reply':
-                $cta_button = [
-                  '#theme' => 'message_cta_button',
-                  '#link' => $link,
-                  '#text' => t('Reply to this comment'),
-                ];
-                break;
-            }
-            if (!empty($cta_button)) {
-              $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
-            }
+          $message_template_id = $message->getTemplate()->id();
+          switch ($message_template_id) {
+            case 'create_comment_author_node_post':
+            case 'create_comment_post_profile':
+            case 'create_comment_following_node':
+            case 'create_comment_reply':
+              // Replace the cta_button token value.
+              if (isset($context['tokens']['cta_button'])) {
+                /** @var \Drupal\Core\Entity\EntityInterface $commented_entity */
+                $commented_entity_type = $commented_entity->getEntityTypeId();
+                // A reply link for a post should go to the post view.
+                $link = NULL;
+                if ($commented_entity_type === 'post') {
+                  $link = $commented_entity->toUrl('canonical', ['absolute' => TRUE])
+                    ->toString();
+                }
+                else {
+                  // For comments however it should go to comment reply page.
+                  $link = Url::fromRoute('comment.reply', [
+                    'entity_type' => $comment->getCommentedEntityTypeId(),
+                    'entity' => $comment->getCommentedEntityId(),
+                    'field_name' => $comment->getFieldName(),
+                    'pid' => $comment->id(),
+                  ])->toString();
+                }
+
+                // Check if the link is generated, then prepare the CTA markup.
+                if ($link) {
+                  $cta_button = [
+                    '#theme' => 'message_cta_button',
+                    '#link' => $link,
+                    '#text' => t('Reply to this comment'),
+                  ];
+                  $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                    ->renderPlain($cta_button);
+                }
+              }
+
+              // Replace the preview token.
+              if (isset($context['tokens']['preview'])) {
+                if ($comment->hasField('field_comment_body') && !$comment->get('field_comment_body')->isEmpty()) {
+                  if ($summary = _social_comment_get_summary($comment->getFieldValue('field_comment_body', 'value'))) {
+                    // Prepare the preview information.
+                    $preview_info = [
+                      '#theme' => 'message_post_comment_preview',
+                      '#summary' => $summary,
+                    ];
+                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
+                  }
+                }
+              }
+              break;
           }
         }
       }
