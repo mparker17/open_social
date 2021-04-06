@@ -5,6 +5,7 @@
  * Builds placeholder replacement tokens for Social Group module.
  */
 
+use Drupal\image\Entity\ImageStyle;
 use Drupal\user\UserInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
@@ -207,14 +208,22 @@ function social_group_tokens_alter(array &$replacements, array $context, Bubblea
                     $user = $group_content->getEntity();
                     if ($user instanceof UserInterface) {
                       $entity_manager = \Drupal::entityTypeManager();
+                      /** @var \Drupal\profile\ProfileStorageInterface $profile_storage */
+                      $profile_storage = $entity_manager->getStorage('profile');
                       /** @var \Drupal\profile\Entity\Profile $profile */
-                      $profile = $entity_manager->getStorage('profile')->loadByUser($user, 'profile');
+                      $profile = $profile_storage->loadByUser($user, 'profile');
+                      // Add the profile image.
+                      if (!empty($profile->field_profile_image->entity)) {
+                        /** @var Drupal\image\Entity\ImageStyle $image_style */
+                        $image_style = ImageStyle::load('social_medium');
+                        $image_url = $image_style->buildUrl($profile->field_profile_image->entity->getFileUri());
+                      }
                       // Add the profile image.
                       $preview_info = [
                         '#theme' => 'message_user_profile_preview',
                         '#profile_name' => $user->getDisplayName(),
                         '#profile_home' => Url::fromRoute('entity.user.canonical', ['user' => $user->id()]),
-                        '#profile_image' => file_create_url($profile->get('field_profile_image')->entity->uri->value),
+                        '#profile_image' => $image_url ?? NULL,
                         '#profile_function' => $profile->getFieldValue('field_profile_function', 'value'),
                         '#profile_organization' => $profile->getFieldValue('field_profile_organization', 'value'),
                       ];

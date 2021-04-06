@@ -47,8 +47,8 @@ function social_event_token_info() {
  */
 function social_event_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
   $replacements = [];
-  /** @var Drupal\message\Entity\Message $message */
   if ($type === 'social_event' && !empty($data['message'])) {
+    /** @var Drupal\message\Entity\Message $message */
     $message = $data['message'];
     $event_enrollment_id = $message->getFieldValue('field_message_related_object', 'target_id');
     foreach ($tokens as $name => $original) {

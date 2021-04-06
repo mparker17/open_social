@@ -145,7 +145,7 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
         /** @var \Drupal\votingapi\Entity\Vote $vote */
         $storage = \Drupal::entityTypeManager()
           ->getStorage($vote->getVotedEntityType());
-        /** @var Drupal\Core\Entity\FieldableEntityInterface $voted_entity */
+        /** @var Drupal\Core\Entity\Entity $voted_entity */
         $voted_entity = $storage->load($vote->getVotedEntityId());
         $message_template_id = $message->getTemplate()->id();
         $content_type = $voted_entity->getEntityTypeId();
