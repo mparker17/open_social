@@ -209,6 +209,13 @@ function social_activity_theme($existing, $type, $theme, $path) {
         'profile_organization' => '',
       ],
     ],
+    'message_group_preview' => [
+      'variables' => [
+        'group_title' => '',
+        'group_type' => '',
+        'group_members' => '',
+      ],
+    ],
   ];
 }
 

@@ -5,6 +5,7 @@
  * Builds placeholder replacement tokens for Social Group module.
  */
 
+use Drupal\group\Entity\Group;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\user\UserInterface;
 use Drupal\Core\Render\BubbleableMetadata;
@@ -185,11 +186,20 @@ function social_group_tokens_alter(array &$replacements, array $context, Bubblea
                   }
                   // Replace the preview token.
                   if (isset($context['tokens']['preview'])) {
-                    $view_builder = \Drupal::entityTypeManager()->getViewBuilder('group');
-                    $storage = \Drupal::entityTypeManager()->getStorage('group');
-                    $group = $storage->load($group_content->getGroup()->id());
-                    $build = $view_builder->view($group, 'small_teaser');
-                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($build);
+                    // Get the group entity.
+                    $group = $group_content->getGroup();
+                    if ($group instanceof Group) {
+                      /** @var \Drupal\social_group\GroupStatistics $group_statistics */
+                      $group_statistics = \Drupal::service('social_group.group_statistics');
+                      // Add the group preview.
+                      $preview_info = [
+                        '#theme' => 'message_group_preview',
+                        '#group_title' => $group->label(),
+                        '#group_type' => strtoupper($group->getGroupType()->label()),
+                        '#group_members' => $group_statistics->getGroupMemberCount($group),
+                      ];
+                      $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
+                    }
                   }
                   break;
 

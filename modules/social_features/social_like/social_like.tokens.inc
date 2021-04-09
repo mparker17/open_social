@@ -226,7 +226,7 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
                   break;
               }
               // Render the preview.
-              if ($preview_info) {
+              if (!empty($preview_info)) {
                 $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
                   ->renderPlain($preview_info);
               }
