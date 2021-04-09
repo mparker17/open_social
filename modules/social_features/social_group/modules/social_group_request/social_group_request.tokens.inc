@@ -7,6 +7,7 @@
 
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
+use Drupal\group\Entity\Group;
 
 /**
  * Implements hook_token_info().
@@ -74,9 +75,9 @@ function social_group_request_tokens_alter(array &$replacements, array $context,
     /** @var Drupal\message\Entity\Message $message */
     $message = $context['data']['message'];
 
-    // Alter the [message:cta_button] token, and replace it with the rendered
-    // content with new text and link.
-    if (isset($context['tokens']['cta_button'])) {
+    // Alter the [message:cta_button] and [message:preview] token, and
+    // replace it with the rendered content with new text and link.
+    if (isset($context['tokens']['cta_button'])|| isset($context['tokens']['preview'])) {
       if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')->isEmpty()) {
         $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
         $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
@@ -88,21 +89,37 @@ function social_group_request_tokens_alter(array &$replacements, array $context,
             ->load($target_id);
 
           if (!empty($group_content)) {
-            $link = Url::fromRoute('view.group_pending_members.membership_requests', ['arg_0' => $group_content->getGroup()->id()],
-              ['absolute' => TRUE])->toString();
-            $message_template_id = $message->getTemplate()->id();
-            $cta_button = [];
-            switch ($message_template_id) {
-              case 'request_to_join_a_group':
-                $cta_button = [
-                  '#theme' => 'message_cta_button',
-                  '#link' => $link,
-                  '#text' => t('View the requests'),
-                ];
-                break;
-            }
-            if (!empty($cta_button)) {
-              $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
+            // Get the group entity.
+            $group = $group_content->getGroup();
+            if ($group instanceof Group) {
+              $link = Url::fromRoute('view.group_pending_members.membership_requests', ['arg_0' => $group->id()],
+                ['absolute' => TRUE])->toString();
+              $message_template_id = $message->getTemplate()->id();
+              switch ($message_template_id) {
+                case 'request_to_join_a_group':
+                  if (isset($context['tokens']['cta_button'])) {
+                    $cta_button = [
+                      '#theme' => 'message_cta_button',
+                      '#link' => $link,
+                      '#text' => t('View the requests'),
+                    ];
+                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
+                    // Replace the preview token.
+                    if (isset($context['tokens']['preview'])) {
+                      /** @var \Drupal\social_group\GroupStatistics $group_statistics */
+                      $group_statistics = \Drupal::service('social_group.group_statistics');
+                      // Add the group preview.
+                      $preview_info = [
+                        '#theme' => 'message_group_preview',
+                        '#group_title' => $group->label(),
+                        '#group_type' => strtoupper($group->getGroupType()->label()),
+                        '#group_members' => $group_statistics->getGroupMemberCount($group),
+                      ];
+                      $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
+                    }
+                  }
+                  break;
+              }
             }
           }
         }
