@@ -222,10 +222,13 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
                       '#type' => strtoupper($voted_entity->getType()),
                       '#link' => $link,
                     ];
-                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
-                      ->renderPlain($preview_info);
                   }
                   break;
+              }
+              // Render the preview.
+              if ($preview_info) {
+                $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
+                  ->renderPlain($preview_info);
               }
             }
             break;
