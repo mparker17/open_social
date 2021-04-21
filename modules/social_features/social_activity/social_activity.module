@@ -180,6 +180,20 @@ function social_activity_social_user_account_header_items_alter(array &$menu_lin
  */
 function social_activity_theme($existing, $type, $theme, $path) {
   return [
+    'message_post_teaser' => [
+      'variables' => [
+        'link' => '',
+        'name' => '',
+        'date' => '',
+        'summary' => '',
+      ],
+    ],
+    'message_node_teaser' => [
+      'variables' => [
+        'link' => '',
+        'type' => '',
+      ],
+    ],
     'message_post_comment_preview' => [
       'variables' => [
         'summary' => '',

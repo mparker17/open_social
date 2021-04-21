@@ -14,6 +14,13 @@ use Drupal\node\NodeInterface;
  * Implements hook_token_info().
  */
 function social_activity_token_info() {
+  // The token additional information has been deprecated in 10.x.
+  // It will be removed from 11.x.
+  $tokens['additional_information'] = [
+    'name' => t('Additional information.'),
+    'description' => t('Additional message information. This token is deprecated, please use "preview" and "cta_button" tokens instead in your message templates.'),
+  ];
+
   $tokens['preview'] = [
     'name' => t('Preview.'),
     'description' => t('Preview of the related entity.'),
@@ -78,6 +85,15 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
             '#link' => $link,
             '#text' => t('Leave a comment'),
           ];
+
+          // This is for token deprecated token 'additional_information'.
+          $additional_information = [
+            '#theme' => 'message_post_teaser',
+            '#name' => $entity->getOwner()->getDisplayName(),
+            '#date' => $date_formatter->format($entity->getCreatedTime(), $date_format),
+            '#summary' => $summary,
+            '#link' => $link,
+          ];
         }
         elseif ($target_type === 'group_content' && $entity instanceof GroupContentInterface) {
           /** @var \Drupal\node\NodeInterface $node */
@@ -89,13 +105,16 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
               ['absolute' => TRUE]
             )->toString();
 
+            $author_name = $node->getOwner()->getDisplayName();
+            $node_type = strtoupper($node->getType());
+
             // Prepare the preview.
             $preview_info = [
               '#theme' => 'message_content_preview',
-              '#author_name' => $node->getOwner()->getDisplayName(),
+              '#author_name' => $author_name,
               '#date' => $date_formatter->format($node->getCreatedTime(), $date_format),
               '#title' => $node->getTitle(),
-              '#type' => strtoupper($node->getType()),
+              '#type' => $node_type,
               '#link' => $link,
             ];
 
@@ -106,12 +125,26 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
               '#text' => t('Read more'),
             ];
 
+            // This is for token deprecated token 'additional_information'.
+            $additional_information = [
+              '#theme' => 'message_node_teaser',
+              '#link' => $link,
+              '#type' => $node_type,
+            ];
           }
         }
 
         // Replace tokens.
         foreach ($tokens as $name => $original) {
           switch ($name) {
+            // The token 'additional_information'̊ is deprecated and
+            // will be removed in 11.x release of Open Social.
+            case 'additional_information':
+              if (!empty($additional_information)) {
+                $replacements[$original] = \Drupal::service('renderer')->renderPlain($additional_information);
+              }
+              break;
+
             case 'preview':
               if (!empty($preview_info)) {
                 $replacements[$original] = \Drupal::service('renderer')->renderPlain($preview_info);
