@@ -46,7 +46,7 @@ function social_group_request_update_10001() {
 
   $message_templates = [
     'message.template.approve_request_join_group' => $path . 'message.template.approve_request_join_group_10001.yml',
-    'message.template.request_to_join_a_group.yml' => $path . 'message.template.request_to_join_a_group_10001.yml',
+    'message.template.request_to_join_a_group' => $path . 'message.template.request_to_join_a_group_10001.yml',
   ];
 
   // Retrieves the configuration factory.
