@@ -6,6 +6,7 @@
  */
 
 use Drupal\group\Entity\GroupType;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Implements hook_install().
@@ -29,4 +30,21 @@ function _social_group_request_set_permissions() {
 
   $group_type = GroupType::load('closed_group');
   $group_type->getOutsiderRole()->grantPermissions(['request group membership'])->save();
+}
+
+/**
+ * Update message template "message.template.approve_request_join_group".
+ *
+ * Added new 'preview' and 'cta_button' tokens.
+ */
+function social_group_request_update_10001() {
+  $config_file = drupal_get_path('module', 'social_group_request') . '/config/static/message.template.approve_request_join_group_10001.yml';
+  if (is_file($config_file)) {
+    $settings = Yaml::parse(file_get_contents($config_file));
+    if (is_array($settings)) {
+      $config = \Drupal::configFactory()
+        ->getEditable('message.template.approve_request_join_group');
+      $config->setData($settings)->save(TRUE);
+    }
+  }
 }
