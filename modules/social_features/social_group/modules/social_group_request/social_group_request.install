@@ -36,7 +36,7 @@ function _social_group_request_set_permissions() {
  * Update the listed below message template files as per new email style.
  *
  * 1. message.template.approve_request_join_group
- * 2. message.template.request_to_join_a_group
+ * 2. message.template.request_to_join_a_group.
  *
  * Added new 'preview' and 'cta_button' tokens to these templates.
  */
