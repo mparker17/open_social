@@ -1,0 +1,97 @@
+"""
+A topic to a piece of content.
+"""
+type Topic implements Node {
+  """
+  The unique identifier for the topic.
+  """
+  id: ID!
+  """
+  The display title of the topic.
+  """
+  title: String!
+  """
+  The author of the topic or NULL if it was placed anonymously.
+  """
+  author: Actor
+  """
+  A hero image for the topic.
+  """
+  image: Image
+  """
+  A topic type.
+  """
+  type: [TopicType]!
+  """
+  The message of the topic as rendered HTML.
+  """
+  bodyHtml: Html!
+  """
+  List of topic comments.
+
+  If no limits are specified will limit to 10 results.
+  """
+  comments(
+    """Returns the elements that come after the specified cursor."""
+    after: Cursor
+    """Returns the elements that come before the specified cursor."""
+    before: Cursor
+    """Returns up to the first `n` elements from the list."""
+    first: Int
+    """Returns up to the last `n` elements from the list."""
+    last: Int
+    """Reverse the order of the underlying list."""
+    reverse: Boolean = false
+    """Sort the underlying list by the given key."""
+    sortKey: CommentSortKeys = CREATED_AT
+  ): TopicCommentConnection!
+  """
+  The url to the topic.
+  """
+  url: Url!
+  """
+  When the topic was created.
+  """
+  created: DateTime!
+}
+
+type TopicEdge implements Edge {
+  cursor: Cursor!
+  node: Topic!
+}
+
+type TopicConnection implements Connection {
+  edges: [TopicEdge!]!
+  nodes: [Topic!]!
+  pageInfo: PageInfo!
+}
+
+"""
+The set of valid sort keys for the topic query.
+"""
+enum TopicSortKeys {
+  """Sort by the `created_at` value"""
+  CREATED_AT
+}
+
+"""
+Information about the comment of a topic.
+"""
+type TopicCommentEdge implements Edge {
+  cursor: Cursor!
+  node: Comment!
+}
+
+"""
+Pagination info for comments of a topic.
+"""
+type TopicCommentConnection implements Connection {
+  edges: [TopicCommentEdge!]!
+  nodes: [Comment!]!
+  pageInfo: PageInfo!
+}
+
+type TopicType {
+  id: ID!
+  name: String
+}
