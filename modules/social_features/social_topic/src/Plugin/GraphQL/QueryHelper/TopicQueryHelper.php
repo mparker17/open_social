@@ -18,11 +18,15 @@ class TopicQueryHelper implements ConnectionQueryHelperInterface {
 
   /**
    * The Drupal entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The key that is used for sorting.
+   *
+   * @var string
    */
   protected string $sortKey;
 
