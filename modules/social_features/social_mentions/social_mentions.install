@@ -97,14 +97,14 @@ function _social_mentions_set_default_config() {
  *
  * Added new 'preview' and 'cta_button' tokens to these templates.
  */
-function social_mentions_update_10001() {
+function social_mentions_update_10201() {
   // Prepare the path.
   $path = drupal_get_path('module', 'social_mentions') . '/config/static/';
 
   $message_templates = [
-    'message.template.create_comment_reply_mention' => $path . 'message.template.create_comment_reply_mention_10001.yml',
-    'message.template.create_mention_comment' => $path . 'message.template.create_mention_comment_10001.yml',
-    'message.template.create_mention_post' => $path . 'message.template.create_mention_post_10001.yml',
+    'message.template.create_comment_reply_mention' => $path . 'message.template.create_comment_reply_mention_10201.yml',
+    'message.template.create_mention_comment' => $path . 'message.template.create_mention_comment_10201.yml',
+    'message.template.create_mention_post' => $path . 'message.template.create_mention_post_10201.yml',
   ];
 
   // Retrieves the configuration factory.
