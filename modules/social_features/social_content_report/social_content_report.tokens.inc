@@ -118,12 +118,6 @@ function social_content_report_tokens_alter(array &$replacements, array $context
                         $summary = _social_comment_get_summary($entity->field_post->value);
                       }
 
-                      // Prepare the link to post.
-                      $link = Url::fromRoute('entity.post.canonical',
-                        ['post' => $entity->id()],
-                        ['absolute' => TRUE]
-                      )->toString();
-
                       // Prepare the preview information.
                       $preview_info = [
                         '#theme' => 'message_post_comment_preview',

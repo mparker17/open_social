@@ -278,23 +278,7 @@ function social_comment_tokens_alter(array &$replacements, array $context, Bubbl
               // Replace the cta_button token value.
               if (isset($context['tokens']['cta_button'])) {
                 /** @var \Drupal\Core\Entity\EntityInterface $commented_entity */
-                $commented_entity_type = $commented_entity->getEntityTypeId();
-                // A reply link for a post should go to the post view.
-                $link = NULL;
-                if ($commented_entity_type === 'post') {
-                  $link = $commented_entity->toUrl('canonical', ['absolute' => TRUE])
-                    ->toString();
-                }
-                else {
-                  // For comments however it should go to comment reply page.
-                  $link = Url::fromRoute('comment.reply', [
-                    'entity_type' => $comment->getCommentedEntityTypeId(),
-                    'entity' => $comment->getCommentedEntityId(),
-                    'field_name' => $comment->getFieldName(),
-                    'pid' => $comment->id(),
-                  ])->toString();
-                }
-
+                $link = $commented_entity->toUrl('canonical', ['absolute' => TRUE]);
                 // Check if the link is generated, then prepare the CTA markup.
                 if ($link) {
                   $cta_button = [
