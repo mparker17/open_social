@@ -8,6 +8,8 @@
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
+use Drupal\image\Entity\ImageStyle;
+use Drupal\user\UserInterface;
 
 /**
  * Implements hook_token_info().
@@ -77,8 +79,9 @@ function social_group_request_tokens_alter(array &$replacements, array $context,
 
     // Alter the [message:cta_button] and [message:preview] token, and
     // replace it with the rendered content with new text and link.
-    if (isset($context['tokens']['cta_button'])|| isset($context['tokens']['preview'])) {
-      if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')->isEmpty()) {
+    if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
+      if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')
+        ->isEmpty()) {
         $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
         $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
 
@@ -92,30 +95,46 @@ function social_group_request_tokens_alter(array &$replacements, array $context,
             // Get the group entity.
             $group = $group_content->getGroup();
             if ($group instanceof Group) {
-              $link = Url::fromRoute('view.group_pending_members.membership_requests', ['arg_0' => $group->id()],
-                ['absolute' => TRUE])->toString();
               $message_template_id = $message->getTemplate()->id();
               switch ($message_template_id) {
                 case 'request_to_join_a_group':
                   if (isset($context['tokens']['cta_button'])) {
+                    $link = Url::fromRoute('view.group_pending_members.membership_requests', ['arg_0' => $group->id()],
+                      ['absolute' => TRUE])->toString();
                     $cta_button = [
                       '#theme' => 'message_cta_button',
                       '#link' => $link,
                       '#text' => t('View the requests'),
                     ];
-                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
+                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                      ->renderPlain($cta_button);
                     // Replace the preview token.
                     if (isset($context['tokens']['preview'])) {
-                      /** @var \Drupal\social_group\GroupStatistics $group_statistics */
-                      $group_statistics = \Drupal::service('social_group.group_statistics');
-                      // Add the group preview.
-                      $preview_info = [
-                        '#theme' => 'message_group_preview',
-                        '#group_title' => $group->label(),
-                        '#group_type' => strtoupper($group->getGroupType()->label()),
-                        '#group_members' => $group_statistics->getGroupMemberCount($group),
-                      ];
-                      $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
+                      $user = $group_content->getEntity();
+                      if ($user instanceof UserInterface) {
+                        $entity_manager = \Drupal::entityTypeManager();
+                        /** @var \Drupal\profile\ProfileStorageInterface $profile_storage */
+                        $profile_storage = $entity_manager->getStorage('profile');
+                        /** @var \Drupal\profile\Entity\Profile $profile */
+                        $profile = $profile_storage->loadByUser($user, 'profile');
+                        // Add the profile image.
+                        if (!empty($profile->field_profile_image->entity)) {
+                          /** @var Drupal\image\Entity\ImageStyle $image_style */
+                          $image_style = ImageStyle::load('social_medium');
+                          $image_url = $image_style->buildUrl($profile->field_profile_image->entity->getFileUri());
+                        }
+                        // Add the profile image.
+                        $preview_info = [
+                          '#theme' => 'message_user_profile_preview',
+                          '#profile_name' => $user->getDisplayName(),
+                          '#profile_home' => Url::fromRoute('entity.user.canonical', ['user' => $user->id()]),
+                          '#profile_image' => $image_url ?? NULL,
+                          '#profile_function' => $profile->getFieldValue('field_profile_function', 'value'),
+                          '#profile_organization' => $profile->getFieldValue('field_profile_organization', 'value'),
+                        ];
+                        $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
+                          ->renderPlain($preview_info);
+                      }
                     }
                   }
                   break;
