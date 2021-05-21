@@ -207,7 +207,7 @@ function social_group_tokens_alter(array &$replacements, array $context, Bubblea
                   if (isset($context['tokens']['cta_button'])) {
                     $cta_button = [
                       '#theme' => 'message_cta_button',
-                      '#link' => $link . '/members',
+                      '#link' => Url::fromRoute('view.group_members.page_group_members', ['group' => $group_content->getGroup()->id()])->toString(),
                       '#text' => t('See all members'),
                     ];
                     $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
