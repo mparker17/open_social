@@ -275,19 +275,19 @@ function social_activity_update_8807() {
  *
  * Added new 'preview' and 'cta_button' tokens to these templates.
  */
-function social_activity_update_10001() {
+function social_activity_update_9001() {
   // Prepare the path.
   $path = drupal_get_path('module', 'social_activity') . '/config/static/';
 
   $message_templates = [
-    'message.template.create_comment_author_node_post' => $path . 'message.template.create_comment_author_node_post_10001.yml',
-    'message.template.create_comment_post_profile' => $path . 'message.template.create_comment_post_profile_10001.yml',
-    'message.template.create_comment_reply' => $path . 'message.template.create_comment_reply_10001.yml',
-    'message.template.create_content_in_joined_group' => $path . 'message.template.create_content_in_joined_group_10001.yml',
-    'message.template.create_post_profile' => $path . 'message.template.create_post_profile_10001.yml',
-    'message.template.event_request_approved' => $path . 'message.template.event_request_approved_10001.yml',
-    'message.template.join_to_group' => $path . 'message.template.join_to_group_10001.yml',
-    'message.template.request_event_enrollment' => $path . 'message.template.request_event_enrollment_10001.yml',
+    'message.template.create_comment_author_node_post' => $path . 'message.template.create_comment_author_node_post_9001.yml',
+    'message.template.create_comment_post_profile' => $path . 'message.template.create_comment_post_profile_9001.yml',
+    'message.template.create_comment_reply' => $path . 'message.template.create_comment_reply_9001.yml',
+    'message.template.create_content_in_joined_group' => $path . 'message.template.create_content_in_joined_group_9001.yml',
+    'message.template.create_post_profile' => $path . 'message.template.create_post_profile_9001.yml',
+    'message.template.event_request_approved' => $path . 'message.template.event_request_approved_9001.yml',
+    'message.template.join_to_group' => $path . 'message.template.join_to_group_9001.yml',
+    'message.template.request_event_enrollment' => $path . 'message.template.request_event_enrollment_9001.yml',
   ];
 
   // Retrieves the configuration factory.

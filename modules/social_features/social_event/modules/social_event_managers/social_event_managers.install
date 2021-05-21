@@ -113,8 +113,8 @@ function social_event_managers_update_8005() {
  *
  * Added new 'preview' and 'cta_button' tokens.
  */
-function social_event_managers_update_10001() {
-  $config_file = drupal_get_path('module', 'social_event_managers') . '/config/static/message.template.member_added_by_event_organiser_10001.yml';
+function social_event_managers_update_9001() {
+  $config_file = drupal_get_path('module', 'social_event_managers') . '/config/static/message.template.member_added_by_event_organiser_9001.yml';
   if (is_file($config_file)) {
     $settings = Yaml::parse(file_get_contents($config_file));
     if (is_array($settings)) {

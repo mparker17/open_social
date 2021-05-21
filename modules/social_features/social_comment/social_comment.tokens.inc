@@ -260,7 +260,7 @@ function social_comment_tokens_alter(array &$replacements, array $context, Bubbl
     // Alter the [message:cta_button] token, and replace it with the rendered
     // content with new text and link.
     if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
-      if (isset($message->field_message_related_object)) {
+      if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')->isEmpty()) {
         $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
         $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
 
