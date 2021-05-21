@@ -188,32 +188,64 @@ function social_follow_taxonomy_tokens_alter(array &$replacements, array $contex
 
     // Alter the [message:cta_button] token, and replace it with the rendered
     // content with new text and link.
-    if (isset($context['tokens']['cta_button'])) {
+    if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
       if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')->isEmpty()) {
         $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
         $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
 
-        if (isset($target_type) && !empty($target_type) && $target_type === 'group_content') {
-          /** @var \Drupal\node\Entity\Node $node */
-          $node = \Drupal::entityTypeManager()
+        if (isset($target_type) && !empty($target_type)) {
+          $entity = \Drupal::entityTypeManager()
             ->getStorage($target_type)
             ->load($target_id);
 
-          if (!empty($node)) {
-            $url_string = $node->toUrl('canonical')->toString(TRUE)->getGeneratedUrl();
+          if (!empty($entity)) {
             $message_template_id = $message->getTemplate()->id();
-            $cta_button = [];
             switch ($message_template_id) {
               case 'update_node_following_tag':
-                $cta_button = [
-                  '#theme' => 'message_cta_button',
-                  '#link' => $url_string,
-                  '#text' => t('Read more about it'),
-                ];
+              case 'create_node_following_tag_stream':
+                if (isset($context['tokens']['cta_button'])) {
+                  $url_string = $entity->toUrl('canonical')->toString(TRUE)->getGeneratedUrl();
+                  $cta_button = [
+                    '#theme' => 'message_cta_button',
+                    '#link' => $url_string,
+                    '#text' => t('Read more about it'),
+                  ];
+                  if (!empty($cta_button)) {
+                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
+                  }
+                }
+
+                // Replace the preview token.
+                if (isset($context['tokens']['preview'])) {
+                  if ($entity instanceof NodeInterface) {
+                    $date_formatter = \Drupal::service('date.formatter');
+                    $date_format = 'social_long_date';
+
+                    /** @var Drupal\node\NodeInterface $entity */
+                    $link = Url::fromRoute('entity.node.canonical',
+                      ['node' => $entity->id()],
+                      ['absolute' => TRUE]
+                    )->toString();
+
+                    $author_name = $entity->getOwner()->getDisplayName();
+                    $entity_type = strtoupper($entity->getType());
+
+                    // Prepare the preview.
+                    $preview_info = [
+                      '#theme' => 'message_content_preview',
+                      '#author_name' => $author_name,
+                      '#date' => $date_formatter->format($entity->getCreatedTime(), $date_format),
+                      '#title' => $entity->getTitle(),
+                      '#type' => $entity_type,
+                      '#link' => $link,
+                    ];
+                  }
+                  if (!empty($preview_info)) {
+                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
+                      ->renderPlain($preview_info);
+                  }
+                }
                 break;
-            }
-            if (!empty($cta_button)) {
-              $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
             }
           }
         }
