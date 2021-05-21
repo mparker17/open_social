@@ -90,18 +90,10 @@ function social_content_report_tokens_alter(array &$replacements, array $context
 
               // Replace the preview token.
               if (isset($context['tokens']['cta_button'])) {
-
-                /** @var \Drupal\flag\FlaggingInterface $flagging */
-                $flagging = $storage->load($flagging_id);
-
-                // Load the flagged entity.
-                /** @var \Drupal\Core\Entity\EntityInterface $entity */
-                $entity = $flagging->getFlaggable();
-
                 $cta_button = [
                   '#theme' => 'message_cta_button',
-                  '#link' => $entity->toUrl()->setAbsolute()->toString(),
-                  '#text' => t('Check the reported content'),
+                  '#link' => Url::fromRoute('view.report_overview.overview')->toString(),
+                  '#text' => t('Check the reported contents'),
                 ];
                 if (!empty($cta_button)) {
                   $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
@@ -110,9 +102,13 @@ function social_content_report_tokens_alter(array &$replacements, array $context
 
               // Replace the preview token.
               if (isset($context['tokens']['preview'])) {
-                $date_formatter = \Drupal::service('date.formatter');
-                $date_format = 'social_long_date';
+                /** @var \Drupal\flag\FlaggingInterface $flagging */
+                $flagging = $storage->load($flagging_id);
+
+                // Load the flagged entity.
+                $entity = $flagging->getFlaggable();
                 $entity_type = $entity->getEntityTypeId();
+
                 switch ($entity_type) {
                   case 'post':
                     if ($entity instanceof PostInterface) {
@@ -138,6 +134,9 @@ function social_content_report_tokens_alter(array &$replacements, array $context
 
                   case 'node':
                     if ($entity instanceof NodeInterface) {
+                      $date_formatter = \Drupal::service('date.formatter');
+                      $date_format = 'social_long_date';
+
                       /** @var Drupal\node\NodeInterface $entity */
                       $link = Url::fromRoute('entity.node.canonical',
                         ['node' => $entity->id()],
