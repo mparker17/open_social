@@ -279,16 +279,13 @@ function social_comment_tokens_alter(array &$replacements, array $context, Bubbl
               if (isset($context['tokens']['cta_button'])) {
                 /** @var \Drupal\Core\Entity\EntityInterface $commented_entity */
                 $link = $commented_entity->toUrl('canonical', ['absolute' => TRUE]);
-                // Check if the link is generated, then prepare the CTA markup.
-                if ($link) {
-                  $cta_button = [
-                    '#theme' => 'message_cta_button',
-                    '#link' => $link,
-                    '#text' => t('Reply to this comment'),
-                  ];
-                  $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
-                    ->renderPlain($cta_button);
-                }
+                $cta_button = [
+                  '#theme' => 'message_cta_button',
+                  '#link' => $link,
+                  '#text' => t('Reply to this comment'),
+                ];
+                $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                  ->renderPlain($cta_button);
               }
 
               // Replace the preview token.

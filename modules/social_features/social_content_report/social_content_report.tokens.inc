@@ -109,13 +109,16 @@ function social_content_report_tokens_alter(array &$replacements, array $context
                 $entity = $flagging->getFlaggable();
                 $entity_type = $entity->getEntityTypeId();
 
+                $summary = '';
+                $preview_info = [];
+
                 switch ($entity_type) {
                   case 'post':
                     if ($entity instanceof PostInterface) {
                       /** @var \Drupal\social_post\Entity\PostInterface $entity */
                       // Get the summary of the comment.
-                      if ($entity->hasField('field_post') && !$entity->field_post->isEmpty()) {
-                        $summary = _social_comment_get_summary($entity->field_post->value);
+                      if ($entity->hasField('field_post') && !$entity->get('field_post')->isEmpty()) {
+                        $summary = _social_comment_get_summary($entity->get('field_post')->getValue());
                       }
 
                       // Prepare the preview information.
