@@ -5,6 +5,7 @@
  * Builds placeholder replacement tokens for Social Group Request module.
  */
 
+use Drupal\file\Entity\File;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
@@ -118,10 +119,17 @@ function social_group_request_tokens_alter(array &$replacements, array $context,
                         /** @var \Drupal\profile\Entity\Profile $profile */
                         $profile = $profile_storage->loadByUser($user, 'profile');
                         // Add the profile image.
+                        /** @var Drupal\image\Entity\ImageStyle $image_style */
+                        $image_style = ImageStyle::load('social_medium');
                         if (!empty($profile->field_profile_image->entity)) {
-                          /** @var Drupal\image\Entity\ImageStyle $image_style */
-                          $image_style = ImageStyle::load('social_medium');
                           $image_url = $image_style->buildUrl($profile->field_profile_image->entity->getFileUri());
+                        }
+                        elseif ($default_image = social_profile_get_default_image()) {
+                          // Add default image.
+                          if (!empty($default_image['id'])) {
+                            $file = File::load($default_image['id']);
+                            $image_url = $image_style->buildUrl($file->getFileUri());
+                          }
                         }
                         // Add the profile image.
                         $preview_info = [
