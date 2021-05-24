@@ -150,15 +150,13 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
           // Replace the preview token.
           if (isset($context['tokens']['preview'])) {
             if ($event = _social_event_get_event_from_enrollment($event_enrollment_id)) {
-              $date_formatter = \Drupal::service('date.formatter');
-              $date_format = 'social_long_date';
 
               // Prepare the preview.
               $preview_info = [
                 '#theme' => 'message_content_preview',
                 '#author_name' => $event->getOwner()
                   ->getDisplayName(),
-                '#date' => $date_formatter->format($event->getCreatedTime(), $date_format),
+                '#date' => _social_event_format_date($event, NULL),
                 '#title' => $event->getTitle(),
                 '#type' => strtoupper($event->getType()),
                 '#link' => $link,

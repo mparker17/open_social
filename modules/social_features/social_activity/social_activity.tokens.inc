@@ -108,11 +108,16 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
             $author_name = $node->getOwner()->getDisplayName();
             $node_type = strtoupper($node->getType());
 
+            $date = $date_formatter->format($entity->getCreatedTime(), $date_format);
+            if ($node->bundle() === 'event') {
+              $date = _social_event_format_date($node, NULL);
+            }
+
             // Prepare the preview.
             $preview_info = [
               '#theme' => 'message_content_preview',
               '#author_name' => $author_name,
-              '#date' => $date_formatter->format($node->getCreatedTime(), $date_format),
+              '#date' => $date,
               '#title' => $node->getTitle(),
               '#type' => $node_type,
               '#link' => $link,

@@ -93,7 +93,6 @@ function social_follow_tag_update_9001() {
   }
 }
 
-
 /**
  * Update message template "message.template.create_node_following_tag_stream".
  *
