@@ -170,45 +170,33 @@ function social_mentions_tokens_alter(array &$replacements, array $context, Bubb
     /** @var Drupal\message\Entity\Message $message */
     $message = $context['data']['message'];
 
-    // Alter the [message:cta_button] token, and replace it with the rendered
-    // content with new text and link.
+    // Alter the [message:cta_button] or [message:preview] token,
+    // and replace it with the rendered content with new text and link.
     if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
       if (isset($message->field_message_related_object)) {
-        $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
-        $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
-
         $message_template_id = $message->getTemplate()->id();
         switch ($message_template_id) {
           case 'create_mention_comment':
-            $entity_type_manager = \Drupal::entityTypeManager();
-            /** @var \Drupal\mentions\Entity\Mentions $mention */
-            $mention = $entity_type_manager
-              ->getStorage($target_type)
-              ->load($target_id);
+            /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
+            $email_token_services = \Drupal::service('social_activity.email_token_services');
+            $mention = $email_token_services->getRelatedObject($message);
 
             if ($mention instanceof Mentions && $mentioned_entity = $mention->getMentionedEntity()) {
               if ($mentioned_entity->getEntityTypeId() === 'comment') {
+                /** @var \Drupal\comment\Entity\Comment $mentioned_entity */
                 $entity = $mentioned_entity->getCommentedEntity();
               }
               else {
                 $entity = $mentioned_entity;
               }
             }
+            /** @var \Drupal\node\Entity\Node $entity */
             if (isset($entity)) {
-              $url_options = ['absolute' => TRUE];
               if (isset($context['tokens']['cta_button'])) {
-                $link = $entity->toUrl('canonical', $url_options)->toString();
-                if ($link) {
-                  $cta_button = [
-                    '#theme' => 'message_cta_button',
-                    '#link' => $link,
-                    '#text' => t('See the comment'),
-                  ];
-                  if (!empty($cta_button)) {
-                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
-                      ->renderPlain($cta_button);
-                  }
-                }
+                $link = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+                $cta_button = $email_token_services->getCtaButton($link, 'See the comment');
+                $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                  ->renderPlain($cta_button);
               }
 
               if (isset($context['tokens']['preview'])) {
@@ -216,20 +204,9 @@ function social_mentions_tokens_alter(array &$replacements, array $context, Bubb
                 if ($entity->hasField($comment_field_name)) {
                   $comment_id = $entity->getFieldValue($comment_field_name, 'cid');
                   /** @var Drupal\comment\Entity\Comment $comment */
-                  $comment = $entity_type_manager->getStorage('comment')
+                  $comment = \Drupal::entityTypeManager()->getStorage('comment')
                     ->load($comment_id);
-                  if ($comment->hasField('field_comment_body') && !$comment->get('field_comment_body')
-                    ->isEmpty()) {
-                    if ($summary = _social_comment_get_summary($comment->getFieldValue('field_comment_body', 'value'))) {
-                      // Prepare the preview information.
-                      $preview_info = [
-                        '#theme' => 'message_post_comment_preview',
-                        '#summary' => $summary,
-                      ];
-                    }
-                  }
-                }
-                if (!empty($preview_info)) {
+                  $preview_info = $email_token_services->getCommentPreview($comment);
                   $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
                     ->renderPlain($preview_info);
                 }

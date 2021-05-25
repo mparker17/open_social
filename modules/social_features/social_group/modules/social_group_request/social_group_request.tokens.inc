@@ -5,11 +5,9 @@
  * Builds placeholder replacement tokens for Social Group Request module.
  */
 
-use Drupal\file\Entity\File;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
-use Drupal\image\Entity\ImageStyle;
 use Drupal\user\UserInterface;
 
 /**
@@ -81,72 +79,37 @@ function social_group_request_tokens_alter(array &$replacements, array $context,
     // Alter the [message:cta_button] and [message:preview] token, and
     // replace it with the rendered content with new text and link.
     if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
-      if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')
-        ->isEmpty()) {
-        $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
-        $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
+      if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')->isEmpty()) {
 
-        if (isset($target_type) && !empty($target_type) && $target_type === 'group_content') {
+        /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
+        $email_token_services = \Drupal::service('social_activity.email_token_services');
+
+        if (!empty($group_content = $email_token_services->getRelatedObject($message)) && $group_content->getEntityType() == 'group_content') {
           /** @var \Drupal\group\Entity\GroupContentInterface $group_content */
-          $group_content = \Drupal::entityTypeManager()
-            ->getStorage($target_type)
-            ->load($target_id);
+          // Get the group entity.
+          $group = $group_content->getGroup();
+          if ($group instanceof Group) {
+            $message_template_id = $message->getTemplate()->id();
+            switch ($message_template_id) {
+              case 'request_to_join_a_group':
+                if (isset($context['tokens']['cta_button'])) {
+                  $link = Url::fromRoute('view.group_pending_members.membership_requests', ['arg_0' => $group->id()],
+                    ['absolute' => TRUE])->toString();
+                  $cta_button = $email_token_services->getCtaButton($link, 'View the requests');
+                  $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
+                    ->renderPlain($cta_button);
+                }
 
-          if (!empty($group_content)) {
-            // Get the group entity.
-            $group = $group_content->getGroup();
-            if ($group instanceof Group) {
-              $message_template_id = $message->getTemplate()->id();
-              switch ($message_template_id) {
-                case 'request_to_join_a_group':
-                  if (isset($context['tokens']['cta_button'])) {
-                    $link = Url::fromRoute('view.group_pending_members.membership_requests', ['arg_0' => $group->id()],
-                      ['absolute' => TRUE])->toString();
-                    $cta_button = [
-                      '#theme' => 'message_cta_button',
-                      '#link' => $link,
-                      '#text' => t('View the requests'),
-                    ];
-                    $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
-                      ->renderPlain($cta_button);
-                    // Replace the preview token.
-                    if (isset($context['tokens']['preview'])) {
-                      $user = $group_content->getEntity();
-                      if ($user instanceof UserInterface) {
-                        $entity_manager = \Drupal::entityTypeManager();
-                        /** @var \Drupal\profile\ProfileStorageInterface $profile_storage */
-                        $profile_storage = $entity_manager->getStorage('profile');
-                        /** @var \Drupal\profile\Entity\Profile $profile */
-                        $profile = $profile_storage->loadByUser($user, 'profile');
-                        // Add the profile image.
-                        /** @var Drupal\image\Entity\ImageStyle $image_style */
-                        $image_style = ImageStyle::load('social_medium');
-                        if (!empty($profile->field_profile_image->entity)) {
-                          $image_url = $image_style->buildUrl($profile->field_profile_image->entity->getFileUri());
-                        }
-                        elseif ($default_image = social_profile_get_default_image()) {
-                          // Add default image.
-                          if (!empty($default_image['id'])) {
-                            $file = File::load($default_image['id']);
-                            $image_url = $image_style->buildUrl($file->getFileUri());
-                          }
-                        }
-                        // Add the profile image.
-                        $preview_info = [
-                          '#theme' => 'message_user_profile_preview',
-                          '#profile_name' => $user->getDisplayName(),
-                          '#profile_home' => Url::fromRoute('entity.user.canonical', ['user' => $user->id()]),
-                          '#profile_image' => $image_url ?? NULL,
-                          '#profile_function' => $profile->getFieldValue('field_profile_function', 'value'),
-                          '#profile_organization' => $profile->getFieldValue('field_profile_organization', 'value'),
-                        ];
-                        $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
-                          ->renderPlain($preview_info);
-                      }
-                    }
+                // Replace the preview token.
+                if (isset($context['tokens']['preview'])) {
+                  /** @var \Drupal\user\Entity\User $user */
+                  $user = $group_content->getEntity();
+                  if ($user instanceof UserInterface) {
+                    $preview_info = $email_token_services->getUserPreview($user);
+                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
                   }
-                  break;
-              }
+                }
+                break;
             }
           }
         }

@@ -20,33 +20,29 @@ function social_private_message_tokens_alter(array &$replacements, array $contex
     // replace it with the rendered content with new text and link.
     if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
       if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')->isEmpty()) {
-        $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
-        $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
 
-        if (isset($target_type) && !empty($target_type)) {
+        /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
+        $email_token_services = \Drupal::service('social_activity.email_token_services');
+
+        if ($private_message = $email_token_services->getRelatedObject($message)) {
+          /** @var \Drupal\private_message\Entity\PrivateMessage $private_message */
           $message_template_id = $message->getTemplate()->id();
           switch ($message_template_id) {
             case 'create_private_message':
-              /** @var \Drupal\private_message\Entity\PrivateMessage $entity */
-              $entity = \Drupal::entityTypeManager()
-                ->getStorage($target_type)
-                ->load($target_id);
-
               // Replace the preview token.
               if (isset($context['tokens']['cta_button'])) {
                 // Use the mapper service to get the ID of the thread.
+                /** @var \Drupal\private_message\Mapper\PrivateMessageMapper $pmService */
                 $pmService = \Drupal::service('private_message.mapper');
-                $thread_id = $pmService->getThreadIdFromMessage($entity);
+
+                $thread_id = $pmService->getThreadIdFromMessage($private_message);
+
                 // Build the url.
                 $thread_url = Url::fromRoute('entity.private_message_thread.canonical',
                   ['private_message_thread' => $thread_id],
                   ['absolute' => TRUE]
-                );
-                $cta_button = [
-                  '#theme' => 'message_cta_button',
-                  '#link' => $thread_url->toString(),
-                  '#text' => t('Reply to this message'),
-                ];
+                )->toString();
+                $cta_button = $email_token_services->getCtaButton($thread_url, 'Reply to this message');
                 if (!empty($cta_button)) {
                   $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
                 }
@@ -54,14 +50,9 @@ function social_private_message_tokens_alter(array &$replacements, array $contex
 
               // Replace the preview token.
               if (isset($context['tokens']['preview'])) {
-                // Prepare the preview.
-                $preview_info = [
-                  '#theme' => 'message_post_comment_preview',
-                  '#summary' => $entity->getMessage(),
-                ];
-
-                $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
-                  ->renderPlain($preview_info);
+                /** @var \Drupal\social_post\Entity\Post $entity */
+                $preview_info = $email_token_services->getPostPreview($entity);
+                $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
               }
 
               break;

@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Core\Url;
 use Drupal\group\Entity\GroupContentInterface;
 use Drupal\node\NodeInterface;
 
@@ -48,43 +47,26 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
     /** @var \Drupal\message\Entity\Message $message */
     $message = $data['message'];
     if (!empty($message->get('field_message_related_object'))) {
+      /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
+      $email_token_services = \Drupal::service('social_activity.email_token_services');
 
-      $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
-      $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
-
-      $entity = \Drupal::entityTypeManager()->getStorage($target_type)
-        ->load($target_id);
+      $entity = $email_token_services->getRelatedObject($message);
       if ($entity) {
         $date_formatter = \Drupal::service('date.formatter');
         $date_format = 'social_long_date';
         $summary = '';
 
-        if ($target_type === 'post') {
+        if ($entity->getEntityTypeId() === 'post') {
           /** @var \Drupal\social_post\Entity\PostInterface $entity */
 
-          // Get the summary of the comment.
-          if ($entity->hasField('field_post') && !$entity->field_post->isEmpty()) {
-            $summary = _social_comment_get_summary($entity->field_post->value);
-          }
-
           // Prepare the link to post.
-          $link = Url::fromRoute('entity.post.canonical',
-            ['post' => $entity->id()],
-            ['absolute' => TRUE]
-          )->toString();
+          $link = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
 
           // Prepare the preview information.
-          $preview_info = [
-            '#theme' => 'message_post_comment_preview',
-            '#summary' => $summary,
-          ];
+          $preview_info = $email_token_services->getPostPreview($entity);
 
-          // Prepare the CTA button markup.
-          $cta_button = [
-            '#theme' => 'message_cta_button',
-            '#link' => $link,
-            '#text' => t('Leave a comment'),
-          ];
+          // Prepare CTA button information.
+          $cta_button = $email_token_services->getCtaButton($link, 'Leave a comment');
 
           // This is for token deprecated token 'additional_information'.
           $additional_information = [
@@ -95,46 +77,23 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
             '#link' => $link,
           ];
         }
-        elseif ($target_type === 'group_content' && $entity instanceof GroupContentInterface) {
-          /** @var \Drupal\node\NodeInterface $node */
+        elseif ($entity->getEntityTypeId() === 'group_content' && $entity instanceof GroupContentInterface) {
+          /** @var \Drupal\node\Entity\Node $node */
           $node = $entity->getEntity();
-
           if ($node instanceof NodeInterface) {
-            $link = Url::fromRoute('entity.node.canonical',
-              ['node' => $node->id()],
-              ['absolute' => TRUE]
-            )->toString();
+            $preview_info = $email_token_services->getContentPreview($node);
 
-            $author_name = $node->getOwner()->getDisplayName();
-            $node_type = strtoupper($node->getType());
-
-            $date = $date_formatter->format($node->getCreatedTime(), $date_format);
-            if ($node->bundle() === 'event') {
-              $date = _social_event_format_date($node, NULL);
-            }
-
-            // Prepare the preview.
-            $preview_info = [
-              '#theme' => 'message_content_preview',
-              '#author_name' => $author_name,
-              '#date' => $date,
-              '#title' => $node->getTitle(),
-              '#type' => $node_type,
-              '#link' => $link,
-            ];
+            // Prepare the link to node.
+            $link = $node->toUrl('canonical', ['absolute' => TRUE])->toString();
 
             // Prepare the CTA button markup.
-            $cta_button = [
-              '#theme' => 'message_cta_button',
-              '#link' => $link,
-              '#text' => t('Read more'),
-            ];
+            $cta_button = $email_token_services->getCtaButton($link, 'Read more');
 
             // This is for token deprecated token 'additional_information'.
             $additional_information = [
               '#theme' => 'message_node_teaser',
               '#link' => $link,
-              '#type' => $node_type,
+              '#type' => strtoupper($node->getType()),
             ];
           }
         }

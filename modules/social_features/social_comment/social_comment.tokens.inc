@@ -261,12 +261,12 @@ function social_comment_tokens_alter(array &$replacements, array $context, Bubbl
     // content with new text and link.
     if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
       if (isset($message->field_message_related_object)) {
-        $target_type = $message->getFieldValue('field_message_related_object', 'target_type');
-        $target_id = $message->getFieldValue('field_message_related_object', 'target_id');
+
+        /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
+        $email_token_services = \Drupal::service('social_activity.email_token_services');
 
         /** @var Drupal\comment\Entity\Comment $comment */
-        $comment = \Drupal::entityTypeManager()->getStorage($target_type)
-          ->load($target_id);
+        $comment = $email_token_services->getRelatedObject($message);
 
         if ($comment instanceof CommentInterface && $commented_entity = $comment->getCommentedEntity()) {
           $message_template_id = $message->getTemplate()->id();
@@ -278,28 +278,16 @@ function social_comment_tokens_alter(array &$replacements, array $context, Bubbl
               // Replace the cta_button token value.
               if (isset($context['tokens']['cta_button'])) {
                 /** @var \Drupal\Core\Entity\EntityInterface $commented_entity */
-                $link = $commented_entity->toUrl('canonical', ['absolute' => TRUE]);
-                $cta_button = [
-                  '#theme' => 'message_cta_button',
-                  '#link' => $link,
-                  '#text' => t('Reply to this comment'),
-                ];
-                $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
-                  ->renderPlain($cta_button);
+                $link = $commented_entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+
+                $cta_button = $email_token_services->getCtaButton($link, 'Reply to this comment');
+                $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')->renderPlain($cta_button);
               }
 
               // Replace the preview token.
               if (isset($context['tokens']['preview'])) {
-                if ($comment->hasField('field_comment_body') && !$comment->get('field_comment_body')->isEmpty()) {
-                  if ($summary = _social_comment_get_summary($comment->getFieldValue('field_comment_body', 'value'))) {
-                    // Prepare the preview information.
-                    $preview_info = [
-                      '#theme' => 'message_post_comment_preview',
-                      '#summary' => $summary,
-                    ];
-                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
-                  }
-                }
+                $preview_info = $email_token_services->getCommentPreview($comment);
+                $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
               }
               break;
           }

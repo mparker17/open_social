@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\votingapi\Entity\Vote;
 use Drupal\Core\Render\Markup;
@@ -141,97 +140,67 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
     // Alter the [message:cta_button] token, and replace it with the rendered
     // content with new text and link.
     if (isset($context['tokens']['cta_button']) || isset($context['tokens']['preview'])) {
-      if ($vote = Vote::load($message->getFieldValue('field_message_related_object', 'target_id'))) {
-        /** @var \Drupal\votingapi\Entity\Vote $vote */
-        $storage = \Drupal::entityTypeManager()
-          ->getStorage($vote->getVotedEntityType());
-        /** @var Drupal\Core\Entity\Entity $voted_entity */
-        $voted_entity = $storage->load($vote->getVotedEntityId());
-        $message_template_id = $message->getTemplate()->id();
-        $content_type = $voted_entity->getEntityTypeId();
-        switch ($message_template_id) {
-          case 'create_like_node_or_post':
-            // Replace the cta_button token value.
-            if (isset($context['tokens']['cta_button'])) {
-              $url_options = ['absolute' => TRUE];
-              $link = $voted_entity->toUrl('canonical', $url_options)
-                ->toString();
-              // We should only use the label of entities who have a label.
-              if ($content_type === 'comment') {
-                /** @var \Drupal\comment\Entity\Comment $voted_entity */
-                $commented_entity = $voted_entity->getCommentedEntity();
-                $link = $commented_entity->toUrl('canonical', $url_options)
+      if ($message->hasField('field_message_related_object') && !$message->get('field_message_related_object')->isEmpty()) {
+        if ($message->getFieldValue('field_message_related_object', 'target_type') == 'vote') {
+          /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
+          $email_token_services = \Drupal::service('social_activity.email_token_services');
+          $vote = $email_token_services->getRelatedObject($message);
+
+          /** @var \Drupal\votingapi\Entity\Vote $vote */
+          $storage = \Drupal::entityTypeManager()
+            ->getStorage($vote->getVotedEntityType());
+          /** @var Drupal\Core\Entity\Entity $voted_entity */
+          $voted_entity = $storage->load($vote->getVotedEntityId());
+          $content_type = $voted_entity->getEntityTypeId();
+
+          $message_template_id = $message->getTemplate()->id();
+
+          switch ($message_template_id) {
+            case 'create_like_node_or_post':
+              // Replace the cta_button token value.
+              if (isset($context['tokens']['cta_button'])) {
+                $url_options = ['absolute' => TRUE];
+                $link = $voted_entity->toUrl('canonical', $url_options)
                   ->toString();
-              }
-              if ($link) {
-                $cta_button = [
-                  '#theme' => 'message_cta_button',
-                  '#link' => $link,
-                  '#text' => t('See all likes'),
-                ];
+                // We should only use the label of entities who have a label.
+                if ($content_type === 'comment') {
+                  /** @var \Drupal\comment\Entity\Comment $voted_entity */
+                  $commented_entity = $voted_entity->getCommentedEntity();
+                  $link = $commented_entity->toUrl('canonical', $url_options)
+                    ->toString();
+                }
+                $cta_button = $email_token_services->getCtaButton($link, 'See all likes');
                 $replacements[$context['tokens']['cta_button']] = \Drupal::service('renderer')
                   ->renderPlain($cta_button);
               }
-            }
-            // Replace the preview token.
-            if (isset($context['tokens']['preview'])) {
-              switch ($content_type) {
-                case 'comment':
-                  if ($voted_entity->hasField('field_comment_body') && !$voted_entity->get('field_comment_body')
-                    ->isEmpty()) {
-                    if ($summary = _social_comment_get_summary($voted_entity->getFieldValue('field_comment_body', 'value'))) {
-                      // Prepare the preview information.
-                      $preview_info = [
-                        '#theme' => 'message_post_comment_preview',
-                        '#summary' => $summary,
-                      ];
+              // Replace the preview token.
+              if (isset($context['tokens']['preview'])) {
+                switch ($content_type) {
+                  case 'comment':
+                    $preview_info = $email_token_services->getCommentPreview($voted_entity);
+                    break;
+
+                  case 'post':
+                    // Get the summary of the comment.
+                    /** @var \Drupal\social_post\Entity\Post $voted_entity */
+                    $preview_info = $email_token_services->getPostPreview($voted_entity);
+                    break;
+
+                  case 'node':
+                    if ($voted_entity instanceof NodeInterface) {
+                      /** @var \Drupal\node\Entity\Node $voted_entity */
+                      $preview_info = $email_token_services->getContentPreview($voted_entity);
+                      break;
                     }
-                  }
-                  break;
-
-                case 'post':
-                  // Get the summary of the comment.
-                  if ($voted_entity->hasField('field_post') && !$voted_entity->get('field_post')
-                    ->isEmpty()) {
-                    if ($summary = _social_comment_get_summary($voted_entity->getFieldValue('field_post', 'value'))) {
-                      // Prepare the preview information.
-                      $preview_info = [
-                        '#theme' => 'message_post_comment_preview',
-                        '#summary' => $summary,
-                      ];
+                    // Render the preview.
+                    if (!empty($preview_info)) {
+                      $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
+                        ->renderPlain($preview_info);
                     }
-                  }
-                  break;
-
-                case 'node':
-                  if ($voted_entity instanceof NodeInterface) {
-                    $date_formatter = \Drupal::service('date.formatter');
-                    $date_format = 'social_long_date';
-                    $link = Url::fromRoute('entity.node.canonical',
-                      ['node' => $voted_entity->id()],
-                      ['absolute' => TRUE]
-                    )->toString();
-
-                    // Prepare the preview.
-                    $preview_info = [
-                      '#theme' => 'message_content_preview',
-                      '#author_name' => $voted_entity->getOwner()
-                        ->getDisplayName(),
-                      '#date' => $date_formatter->format($voted_entity->getCreatedTime(), $date_format),
-                      '#title' => $voted_entity->getTitle(),
-                      '#type' => strtoupper($voted_entity->getType()),
-                      '#link' => $link,
-                    ];
-                  }
-                  break;
+                }
+                break;
               }
-              // Render the preview.
-              if (!empty($preview_info)) {
-                $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
-                  ->renderPlain($preview_info);
-              }
-            }
-            break;
+          }
         }
       }
     }
