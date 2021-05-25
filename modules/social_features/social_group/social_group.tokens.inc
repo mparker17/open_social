@@ -163,7 +163,7 @@ function social_group_tokens_alter(array &$replacements, array $context, Bubblea
         /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
         $email_token_services = \Drupal::service('social_activity.email_token_services');
 
-        if (!empty($group_content = $email_token_services->getRelatedObject($message)) && $group_content->getEntityType() == 'group_content') {
+        if (!empty($group_content = $email_token_services->getRelatedObject($message)) && $group_content->getEntityTypeId() == 'group_content') {
           /** @var \Drupal\group\Entity\GroupContentInterface $group_content */
           // Get the group entity.
           /** @var Drupal\group\Entity\Group $group */
@@ -181,12 +181,8 @@ function social_group_tokens_alter(array &$replacements, array $context, Bubblea
                   }
                   // Replace the preview token.
                   if (isset($context['tokens']['preview'])) {
-                    // Get the group entity.
-                    $group = $group_content->getGroup();
-                    if ($group instanceof Group) {
-                      $preview_info = $email_token_services->getGroupPreview($group);
-                      $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
-                    }
+                    $preview_info = $email_token_services->getGroupPreview($group);
+                    $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
                   }
                   break;
 

@@ -190,15 +190,11 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
                     if ($voted_entity instanceof NodeInterface) {
                       /** @var \Drupal\node\Entity\Node $voted_entity */
                       $preview_info = $email_token_services->getContentPreview($voted_entity);
-                      break;
                     }
-                    // Render the preview.
-                    if (!empty($preview_info)) {
-                      $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
-                        ->renderPlain($preview_info);
-                    }
+                    break;
                 }
-                break;
+                // Render the preview.
+                $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
               }
           }
         }

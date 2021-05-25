@@ -136,8 +136,8 @@ function social_event_tokens_alter(array &$replacements, array $context, Bubblea
           // Replace the preview token.
           if (isset($context['tokens']['preview'])) {
             if ($event = _social_event_get_event_from_enrollment($event_enrollment_id)) {
-              /** @var \Drupal\node\Entity\Node $entity */
-              $preview_info = $email_token_services->getContentPreview($entity);
+              /** @var \Drupal\node\Entity\Node $event */
+              $preview_info = $email_token_services->getContentPreview($event);
               $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
             }
           }

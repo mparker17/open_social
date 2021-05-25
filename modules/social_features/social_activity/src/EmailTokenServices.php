@@ -136,12 +136,13 @@ class EmailTokenServices {
 
     // Get the summary of the comment.
     if ($post->hasField('field_post') && !$post->get('field_post')->isEmpty()) {
-      $summary = _social_comment_get_summary($post->get('field_post')->getValue());
-      // Prepare the preview information.
-      $preview_info = [
-        '#theme' => 'message_post_comment_preview',
-        '#summary' => $summary,
-      ];
+      if ($summary = _social_comment_get_summary($post->getFieldValue('field_post', 'value'))) {
+        // Prepare the preview information.
+        $preview_info = [
+          '#theme' => 'message_post_comment_preview',
+          '#summary' => $summary,
+        ];
+      }
     }
 
     return $preview_info;
