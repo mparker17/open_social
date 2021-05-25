@@ -4,14 +4,15 @@ namespace Drupal\social_activity;
 
 use Drupal\comment\Entity\Comment;
 use Drupal\Core\Datetime\DateFormatter;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\group\Entity\Group;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\message\Entity\Message;
-use Drupal\Core\Entity\entityTypeManagerInterface;
 use Drupal\node\Entity\Node;
+use Drupal\social_group\GroupStatistics;
 use Drupal\social_post\Entity\Post;
 use Drupal\user\Entity\User;
 
@@ -27,9 +28,9 @@ class EmailTokenServices {
   /**
    * Entity type manager services.
    *
-   * @var \Drupal\Core\Entity\entityTypeManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManager
    */
-  protected entityTypeManagerInterface $entityTypeManager;
+  protected EntityTypeManager $entityTypeManager;
 
   /**
    * Date Formatter services.
@@ -39,11 +40,26 @@ class EmailTokenServices {
   protected DateFormatter $dateFormatter;
 
   /**
-   * Constructs a EmailTokenServices object.
+   * GroupStatistics services.
+   *
+   * @var \Drupal\social_group\GroupStatistics
    */
-  public function __construct(entityTypeManagerInterface $entity_type_manager, DateFormatter $date_formatter) {
+  protected GroupStatistics $groupStatistics;
+
+  /**
+   * Constructs a EmailTokenServices object.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   *   EntityTypeManager object.
+   * @param \Drupal\Core\Datetime\DateFormatter $date_formatter
+   *   DateFormatter object.
+   * @param \Drupal\social_group\GroupStatistics $group_statistics
+   *   GroupStatistics object.
+   */
+  public function __construct(EntityTypeManager $entity_type_manager, DateFormatter $date_formatter, GroupStatistics $group_statistics) {
     $this->entityTypeManager = $entity_type_manager;
     $this->dateFormatter = $date_formatter;
+    $this->groupStatistics = $group_statistics;
   }
 
   /**
@@ -74,6 +90,8 @@ class EmailTokenServices {
    *   The renderable array.
    */
   public function getCommentPreview(Comment $comment) {
+    $preview_info = [];
+
     if ($comment->hasField('field_comment_body') && !$comment->get('field_comment_body')->isEmpty()) {
       if ($summary = _social_comment_get_summary($comment->getFieldValue('field_comment_body', 'value'))) {
         // Prepare the preview information.
@@ -203,19 +221,13 @@ class EmailTokenServices {
    *   The renderable array.
    */
   public function getGroupPreview(Group $group) {
-    $preview_info = [];
-
-    /** @var \Drupal\social_group\GroupStatistics $group_statistics */
-    $group_statistics = \Drupal::service('social_group.group_statistics');
     // Add the group preview.
-    $preview_info = [
+    return [
       '#theme' => 'message_group_preview',
       '#group_title' => $group->label(),
       '#group_type' => strtoupper($group->getGroupType()->label()),
-      '#group_members' => $group_statistics->getGroupMemberCount($group),
+      '#group_members' => $this->groupStatistics->getGroupMemberCount($group),
     ];
-
-    return $preview_info;
   }
 
   /**

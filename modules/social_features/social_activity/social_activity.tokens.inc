@@ -57,7 +57,7 @@ function social_activity_tokens($type, $tokens, array $data, array $options, Bub
         $summary = '';
 
         if ($entity->getEntityTypeId() === 'post') {
-          /** @var \Drupal\social_post\Entity\PostInterface $entity */
+          /** @var \Drupal\social_post\Entity\Post $entity */
 
           // Prepare the link to post.
           $link = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();

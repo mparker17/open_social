@@ -175,6 +175,7 @@ function social_like_tokens_alter(array &$replacements, array $context, Bubbleab
               }
               // Replace the preview token.
               if (isset($context['tokens']['preview'])) {
+                $preview_info = [];
                 switch ($content_type) {
                   case 'comment':
                     $preview_info = $email_token_services->getCommentPreview($voted_entity);

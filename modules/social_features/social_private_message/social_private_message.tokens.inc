@@ -50,8 +50,10 @@ function social_private_message_tokens_alter(array &$replacements, array $contex
 
               // Replace the preview token.
               if (isset($context['tokens']['preview'])) {
-                /** @var \Drupal\social_post\Entity\Post $entity */
-                $preview_info = $email_token_services->getPostPreview($entity);
+                $preview_info = [
+                  '#theme' => 'message_post_comment_preview',
+                  '#summary' => $private_message->getMessage(),
+                ];
                 $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')->renderPlain($preview_info);
               }
 
