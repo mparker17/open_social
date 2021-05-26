@@ -8,13 +8,13 @@
     </span>
 
     {% if profile_function or profile_organization %}
-      <span class="list-item__text--small">
+      <div class="list-item__text--small">
         {% if profile_organization %}
           {{ '@function @ @organization'|t({'@function': profile_function, '@organization': profile_organization}) }}
         {% else %}
           {{ profile_function }}
         {% endif %}
-      </span>
+      </div>
     {% endif %}
   </span>
 </div>
