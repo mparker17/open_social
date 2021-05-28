@@ -177,6 +177,8 @@ function social_mentions_tokens_alter(array &$replacements, array $context, Bubb
         $message_template_id = $message->getTemplate()->id();
         switch ($message_template_id) {
           case 'create_mention_comment':
+          case 'create_mention_post':
+          case 'create_comment_reply_mention':
             /** @var \Drupal\social_activity\EmailTokenServices $email_token_services */
             $email_token_services = \Drupal::service('social_activity.email_token_services');
             $mention = $email_token_services->getRelatedObject($message);
@@ -190,7 +192,6 @@ function social_mentions_tokens_alter(array &$replacements, array $context, Bubb
                 $entity = $mentioned_entity;
               }
             }
-            /** @var \Drupal\node\Entity\Node $entity */
             if (isset($entity)) {
               if (isset($context['tokens']['cta_button'])) {
                 $link = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
@@ -200,16 +201,33 @@ function social_mentions_tokens_alter(array &$replacements, array $context, Bubb
               }
 
               if (isset($context['tokens']['preview'])) {
-                $comment_field_name = 'field_' . $entity->bundle() . '_comments';
-                if ($entity->hasField($comment_field_name)) {
+                $preview_info = [];
+                // Prepare comment field name.
+                $comment_field_name = '';
+                switch ($entity->getEntityTypeId()) {
+                  case 'comment':
+                    $comment_field_name = 'field_comment_body';
+                    break;
+
+                  case 'node':
+                    $comment_field_name = 'field_' . $entity->bundle() . '_comments';
+                    break;
+
+                  case 'post':
+                  case 'photo':
+                    // Get the summary of the comment.
+                    $preview_info = $email_token_services->getPostPreview($entity);
+                    break;
+                }
+                if ($comment_field_name && $entity->hasField($comment_field_name)) {
                   $comment_id = $entity->getFieldValue($comment_field_name, 'cid');
                   /** @var Drupal\comment\Entity\Comment $comment */
                   $comment = \Drupal::entityTypeManager()->getStorage('comment')
                     ->load($comment_id);
                   $preview_info = $email_token_services->getCommentPreview($comment);
-                  $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
-                    ->renderPlain($preview_info);
                 }
+                $replacements[$context['tokens']['preview']] = \Drupal::service('renderer')
+                  ->renderPlain($preview_info);
               }
             }
             break;
