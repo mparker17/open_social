@@ -20,6 +20,8 @@ type Topic implements Node {
   image: Image
   """
   A topic type.
+
+  It is a form of news, blogs, or discussions.
   """
   type: [TopicType]!
   """
