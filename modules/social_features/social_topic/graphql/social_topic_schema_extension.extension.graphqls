@@ -6,6 +6,8 @@ extend type Query {
   If no limits are specified will limit to 10 results.
   """
   topics(
+    """Filtering by specific type of topic."""
+    topicType: String
     """Returns the elements that come after the specified cursor."""
     after: Cursor
     """Returns the elements that come before the specified cursor."""

@@ -18,6 +18,10 @@ use Drupal\social_topic\Plugin\GraphQL\QueryHelper\TopicQueryHelper;
  *     label = @Translation("EntityConnection")
  *   ),
  *   consumes = {
+ *     "topicType" = @ContextDefinition("string",
+ *       label = @Translation("Topic type"),
+ *       required = FALSE
+ *     ),
  *     "first" = @ContextDefinition("integer",
  *       label = @Translation("First"),
  *       required = FALSE
@@ -52,6 +56,8 @@ class QueryTopic extends EntityDataProducerPluginBase {
   /**
    * Resolves the request to the requested values.
    *
+   * @param string|null $topicType
+   *   Filtering by specific type of topic.
    * @param int|null $first
    *   Fetch the first X results.
    * @param string|null $after
@@ -70,8 +76,8 @@ class QueryTopic extends EntityDataProducerPluginBase {
    * @return \Drupal\social_graphql\GraphQL\ConnectionInterface
    *   An entity connection with results and data about the paginated results.
    */
-  public function resolve(?int $first, ?string $after, ?int $last, ?string $before, bool $reverse, string $sortKey, RefinableCacheableDependencyInterface $metadata) {
-    $query_helper = new TopicQueryHelper($this->entityTypeManager, $sortKey);
+  public function resolve(?string $topicType, ?int $first, ?string $after, ?int $last, ?string $before, bool $reverse, string $sortKey, RefinableCacheableDependencyInterface $metadata) {
+    $query_helper = new TopicQueryHelper($sortKey, $this->entityTypeManager, $this->graphqlEntityBuffer, $topicType);
     $metadata->addCacheableDependency($query_helper);
 
     $connection = new EntityConnection($query_helper);

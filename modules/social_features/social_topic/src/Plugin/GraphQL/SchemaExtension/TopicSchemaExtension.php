@@ -66,7 +66,7 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('field', $builder->fromValue('field_topic_image'))
     );
 
-    $registry->addFieldResolver('Topic', 'type',
+    $registry->addFieldResolver('Topic', 'topicType',
       $builder->produce('entity_reference')
         ->map('entity', $builder->fromParent())
         ->map('field', $builder->fromValue('field_topic_type'))
@@ -122,6 +122,7 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
   protected function addQueryFields(ResolverRegistryInterface $registry, ResolverBuilder $builder) {
     $registry->addFieldResolver('Query', 'topics',
       $builder->produce('query_topic')
+        ->map('topicType', $builder->fromArgument('topicType'))
         ->map('after', $builder->fromArgument('after'))
         ->map('before', $builder->fromArgument('before'))
         ->map('first', $builder->fromArgument('first'))

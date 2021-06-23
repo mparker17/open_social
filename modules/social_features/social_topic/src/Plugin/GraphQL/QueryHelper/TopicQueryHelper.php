@@ -4,8 +4,9 @@ namespace Drupal\social_topic\Plugin\GraphQL\QueryHelper;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\graphql\GraphQL\Buffers\EntityBuffer;
 use Drupal\node\Entity\Node;
-use Drupal\social_graphql\GraphQL\ConnectionQueryHelperInterface;
+use Drupal\social_graphql\GraphQL\ConnectionQueryHelperBase;
 use Drupal\social_graphql\Wrappers\Cursor;
 use Drupal\social_graphql\Wrappers\Edge;
 use GraphQL\Deferred;
@@ -14,44 +15,52 @@ use GraphQL\Executor\Promise\Adapter\SyncPromise;
 /**
  * Loads topics.
  */
-class TopicQueryHelper implements ConnectionQueryHelperInterface {
+class TopicQueryHelper extends ConnectionQueryHelperBase {
 
   /**
-   * The Drupal entity type manager.
+   * The topic type.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @var string|null
    */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The key that is used for sorting.
-   *
-   * @var string
-   */
-  protected string $sortKey;
+  protected ?string $topicType;
 
   /**
    * TopicQueryHelper constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The Drupal entity type manager.
    * @param string $sort_key
    *   The key that is used for sorting.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The Drupal entity type manager.
+   * @param \Drupal\graphql\GraphQL\Buffers\EntityBuffer $graphql_entity_buffer
+   *   The GraphQL entity buffer.
+   * @param string|null $topic_type
+   *   The topic type.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, string $sort_key) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->sortKey = $sort_key;
+  public function __construct(string $sort_key, EntityTypeManagerInterface $entity_type_manager, EntityBuffer $graphql_entity_buffer, ?string $topic_type) {
+    parent::__construct($sort_key, $entity_type_manager, $graphql_entity_buffer);
+    $this->topicType = $topic_type;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuery() : QueryInterface {
-    return $this->entityTypeManager->getStorage('node')
+  public function getQuery(): QueryInterface {
+    $query = $this->entityTypeManager->getStorage('node')
       ->getQuery()
       ->currentRevision()
       ->accessCheck(TRUE)
       ->condition('type', 'topic');
+
+    if ($this->topicType) {
+      $term_ids = $this->entityTypeManager->getStorage('taxonomy_term')
+        ->getQuery()
+        ->condition('name', $this->topicType)
+        ->execute();
+
+      $query->condition('field_topic_type', $term_ids, 'IN');
+    }
+
+    return $query;
   }
 
   /**

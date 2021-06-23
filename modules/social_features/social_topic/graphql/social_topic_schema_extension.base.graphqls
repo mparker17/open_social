@@ -23,7 +23,7 @@ type Topic implements Node {
 
   It is a form of news, blogs, or discussions.
   """
-  type: [TopicType]!
+  topicType: [TopicType]!
   """
   The message of the topic as rendered HTML.
   """
