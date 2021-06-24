@@ -145,7 +145,7 @@ class EventManagers extends EntityDataProducerPluginBase {
    *   An entity connection with results and data about the paginated results.
    */
   public function resolve(NodeInterface $event, ?int $first, ?string $after, ?int $last, ?string $before, bool $reverse, string $sortKey, RefinableCacheableDependencyInterface $metadata) {
-    $query_helper = new EventManagersQueryHelper($event, $this->entityTypeManager, $sortKey, $this->database);
+    $query_helper = new EventManagersQueryHelper($sortKey, $this->entityTypeManager, $this->graphqlEntityBuffer, $event, $this->database);
     $metadata->addCacheableDependency($query_helper);
 
     $connection = new EntityConnection($query_helper);

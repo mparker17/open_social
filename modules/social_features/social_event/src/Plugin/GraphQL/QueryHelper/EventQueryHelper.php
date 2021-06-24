@@ -2,10 +2,9 @@
 
 namespace Drupal\social_event\Plugin\GraphQL\QueryHelper;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\node\Entity\Node;
-use Drupal\social_graphql\GraphQL\ConnectionQueryHelperInterface;
+use Drupal\social_graphql\GraphQL\ConnectionQueryHelperBase;
 use Drupal\social_graphql\Wrappers\Cursor;
 use Drupal\social_graphql\Wrappers\Edge;
 use GraphQL\Deferred;
@@ -14,34 +13,7 @@ use GraphQL\Executor\Promise\Adapter\SyncPromise;
 /**
  * Loads events.
  */
-class EventQueryHelper implements ConnectionQueryHelperInterface {
-
-  /**
-   * The drupal entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The key that is used for sorting.
-   *
-   * @var string
-   */
-  protected string $sortKey;
-
-  /**
-   * EventQueryHelper constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The Drupal entity type manager.
-   * @param string $sort_key
-   *   The key that is used for sorting.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, string $sort_key) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->sortKey = $sort_key;
-  }
+class EventQueryHelper extends ConnectionQueryHelperBase {
 
   /**
    * {@inheritdoc}

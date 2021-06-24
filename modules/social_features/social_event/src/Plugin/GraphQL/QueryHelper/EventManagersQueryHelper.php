@@ -5,8 +5,9 @@ namespace Drupal\social_event\Plugin\GraphQL\QueryHelper;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\graphql\GraphQL\Buffers\EntityBuffer;
 use Drupal\node\NodeInterface;
-use Drupal\social_graphql\GraphQL\ConnectionQueryHelperInterface;
+use Drupal\social_graphql\GraphQL\ConnectionQueryHelperBase;
 use Drupal\social_graphql\Wrappers\Cursor;
 use Drupal\social_graphql\Wrappers\Edge;
 use Drupal\user\UserInterface;
@@ -16,7 +17,7 @@ use GraphQL\Executor\Promise\Adapter\SyncPromise;
 /**
  * Loads event managers.
  */
-class EventManagersQueryHelper implements ConnectionQueryHelperInterface {
+class EventManagersQueryHelper extends ConnectionQueryHelperBase {
 
   /**
    * The event for which managers are being fetched.
@@ -24,40 +25,36 @@ class EventManagersQueryHelper implements ConnectionQueryHelperInterface {
   protected NodeInterface $event;
 
   /**
-   * The drupal entity type manager.
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The key that is used for sorting.
-   *
-   * @var string
-   */
-  protected string $sortKey;
-
-  /**
    * The database service.
    *
    * @var \Drupal\Core\Database\Connection
    */
-  protected $database;
+  protected Connection $database;
 
   /**
    * EventManagersQueryHelper constructor.
    *
-   * @param \Drupal\node\NodeInterface $event
-   *   The event for which moderators are being fetched.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The Drupal entity type manager.
    * @param string $sort_key
    *   The key that is used for sorting.
-   * @param \Drupal\Core\Database\Connection $database
-   *   Database Service Object.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The Drupal entity type manager.
+   * @param \Drupal\graphql\GraphQL\Buffers\EntityBuffer $graphql_entity_buffer
+   *   The GraphQL entity buffer.
+   * @param NodeInterface $event
+   *   The event.
+   * @param Connection $database
+   *   The database.
    */
-  public function __construct(NodeInterface $event, EntityTypeManagerInterface $entity_type_manager, string $sort_key, Connection $database) {
+  public function __construct(
+    string $sort_key,
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityBuffer $graphql_entity_buffer,
+    NodeInterface $event,
+    Connection $database
+  ) {
+    parent::__construct($sort_key, $entity_type_manager, $graphql_entity_buffer);
+
     $this->event = $event;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->sortKey = $sort_key;
     $this->database = $database;
   }
 
