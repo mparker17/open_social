@@ -21,6 +21,8 @@ class EventManagersQueryHelper extends ConnectionQueryHelperBase {
 
   /**
    * The event for which managers are being fetched.
+   *
+   * @var \Drupal\node\NodeInterface
    */
   protected NodeInterface $event;
 
@@ -40,9 +42,9 @@ class EventManagersQueryHelper extends ConnectionQueryHelperBase {
    *   The Drupal entity type manager.
    * @param \Drupal\graphql\GraphQL\Buffers\EntityBuffer $graphql_entity_buffer
    *   The GraphQL entity buffer.
-   * @param NodeInterface $event
+   * @param \Drupal\node\NodeInterface $event
    *   The event.
-   * @param Connection $database
+   * @param \Drupal\Core\Database\Connection $database
    *   The database.
    */
   public function __construct(

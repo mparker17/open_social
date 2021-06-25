@@ -65,7 +65,7 @@ class EventManagers extends EntityDataProducerPluginBase {
    *
    * @var \Drupal\Core\Database\Connection
    */
-  protected $database;
+  protected Connection $database;
 
   /**
    * {@inheritdoc}

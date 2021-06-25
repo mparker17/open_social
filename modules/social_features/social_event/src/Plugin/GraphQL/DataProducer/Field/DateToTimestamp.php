@@ -12,7 +12,7 @@ use Drupal\graphql\Plugin\GraphQL\DataProducer\DataProducerPluginBase;
  * @DataProducer(
  *   id = "date_to_timestamp",
  *   name = @Translation("Date to timestamp"),
- *   description = @Translation("Loads entities from date field."),
+ *   description = @Translation("Convert date field object to timestamp."),
  *   produces = @ContextDefinition("int",
  *     label = @Translation("Timestamp")
  *   ),
@@ -32,14 +32,14 @@ class DateToTimestamp extends DataProducerPluginBase {
    *   The date field object.
    *
    * @return int|null
-   *   A discussion start or end day timestamp.
+   *   An event start or end day timestamp.
    */
   public function resolve(DateTimeFieldItemList $field) {
     if (empty($field->getValue())) {
       return NULL;
     }
 
-    return $field->{ DateTimeItem::DATETIME_TYPE_DATE }->getTimestamp();
+    return $field->{DateTimeItem::DATETIME_TYPE_DATE}->getTimestamp();
   }
 
 }
