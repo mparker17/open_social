@@ -28,8 +28,10 @@ class SingleEntityReference extends DataProducerPluginBase {
    * Resolve given entities.
    *
    * @param array $entities
+   *   Array of entities.
    *
    * @return \GraphQL\Deferred|null
+   *   Single entity item.
    */
   public function resolve(array $entities) {
     if (!is_array($entities)) {
