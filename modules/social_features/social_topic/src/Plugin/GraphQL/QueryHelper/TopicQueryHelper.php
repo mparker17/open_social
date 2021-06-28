@@ -57,7 +57,9 @@ class TopicQueryHelper extends ConnectionQueryHelperBase {
         ->condition('name', $this->topicType)
         ->execute();
 
-      $query->condition('field_topic_type', $term_ids, 'IN');
+      // We do condition if filter value for topic type is correct, otherwise,
+      // we display an empty array instead of showing all results.
+      $query->condition('field_topic_type', $term_ids ?: [0], 'IN');
     }
 
     return $query;

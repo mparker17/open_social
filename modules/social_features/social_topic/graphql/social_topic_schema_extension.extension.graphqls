@@ -31,4 +31,9 @@ extend type Query {
     """
     id: ID!
   ): Topic
+
+  """
+  List of all topic types on the platform.
+  """
+  topicTypes: [TopicType!]!
 }

@@ -1,5 +1,9 @@
 """
-A topic to a piece of content.
+A type of content on Open Social which allows users to share information
+or organise discussions.
+
+A topic can be a piece of news, blog, a document, or another type depending
+on the platform.
 """
 type Topic implements Node {
   """
@@ -11,7 +15,7 @@ type Topic implements Node {
   """
   title: String!
   """
-  The author of the topic or NULL if it was placed anonymously.
+  The author of the topic.
   """
   author: Actor
   """
@@ -19,11 +23,13 @@ type Topic implements Node {
   """
   image: Image
   """
-  A topic type.
+  The type of the topic.
 
-  It is a form of news, blogs, or discussions.
+  Each topic is tagged with a topic type to make it clear what this topic is about.
+  A topic can be a piece of news, a blogpost, a document, or another type depending on the platform.
+  To get a list of the available topic types for a platform see `Query.topicTypes`.
   """
-  topicType: [TopicType]!
+  topicType: TopicType!
   """
   The message of the topic as rendered HTML.
   """

@@ -66,12 +66,6 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('field', $builder->fromValue('field_topic_image'))
     );
 
-    $registry->addFieldResolver('Topic', 'topicType',
-      $builder->produce('entity_reference')
-        ->map('entity', $builder->fromParent())
-        ->map('field', $builder->fromValue('field_topic_type'))
-    );
-
     $registry->addFieldResolver('Topic', 'created',
       $builder->fromPath('entity:node', 'created.value')
     );
@@ -98,6 +92,16 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
 
     $registry->addFieldResolver('Topic', 'created',
       $builder->fromPath('entity:node', 'created.value')
+    );
+
+    $registry->addFieldResolver('Topic', 'topicType',
+      $builder->compose(
+        $builder->produce('entity_reference')
+          ->map('entity', $builder->fromParent())
+          ->map('field', $builder->fromValue('field_topic_type')),
+        $builder->produce('single_entity')
+          ->map('entities', $builder->fromParent())
+      )
     );
 
     $registry->addFieldResolver('TopicType', 'id',
@@ -136,6 +140,12 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('type', $builder->fromValue('node'))
         ->map('bundles', $builder->fromValue(['topic']))
         ->map('uuid', $builder->fromArgument('id'))
+    );
+
+    $registry->addFieldResolver('Query', 'topicTypes',
+      $builder->produce('taxonomy_load_tree')
+        ->map('vid', $builder->fromValue('topic_types'))
+        ->map('parent', $builder->fromValue(0))
     );
   }
 
