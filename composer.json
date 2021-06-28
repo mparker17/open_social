@@ -113,6 +113,9 @@
             },
             "drupal/views_infinite_scroll" : {
                 "Headers in table format repeat on load more instead of adding rows": "https://www.drupal.org/files/issues/2019-08-15/table_tbody_append-2899705-26.patch"
+            },
+            "drupal/address": {
+                "Default country value produces missing schema problem": "https://www.drupal.org/files/issues/2019-05-30/default_country_schema_problem-3058288-2.patch"
             }
         }
     },
