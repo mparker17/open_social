@@ -5,7 +5,7 @@ or organise discussions.
 A topic can be a piece of news, blog, a document, or another type depending
 on the platform.
 """
-type Topic implements Node {
+type Topic implements Node & Commentable {
   """
   The unique identifier for the topic.
   """
@@ -21,7 +21,7 @@ type Topic implements Node {
   """
   A hero image for the topic.
   """
-  image: Image
+  heroImage: Image
   """
   The type of the topic.
 
@@ -29,7 +29,7 @@ type Topic implements Node {
   A topic can be a piece of news, a blogpost, a document, or another type depending on the platform.
   To get a list of the available topic types for a platform see `Query.topicTypes`.
   """
-  topicType: TopicType!
+  type: TopicType!
   """
   The message of the topic as rendered HTML.
   """
@@ -52,7 +52,7 @@ type Topic implements Node {
     reverse: Boolean = false
     """Sort the underlying list by the given key."""
     sortKey: CommentSortKeys = CREATED_AT
-  ): TopicCommentConnection!
+  ): CommentConnection!
   """
   The url to the topic.
   """
@@ -78,28 +78,11 @@ type TopicConnection implements Connection {
 The set of valid sort keys for the topic query.
 """
 enum TopicSortKeys {
-  """Sort by the `created_at` value"""
+  """Sort by topic creation date"""
   CREATED_AT
-}
-
-"""
-Information about the comment of a topic.
-"""
-type TopicCommentEdge implements Edge {
-  cursor: Cursor!
-  node: Comment!
-}
-
-"""
-Pagination info for comments of a topic.
-"""
-type TopicCommentConnection implements Connection {
-  edges: [TopicCommentEdge!]!
-  nodes: [Comment!]!
-  pageInfo: PageInfo!
 }
 
 type TopicType {
   id: ID!
-  name: String
+  label: String
 }

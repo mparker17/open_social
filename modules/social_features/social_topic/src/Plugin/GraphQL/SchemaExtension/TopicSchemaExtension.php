@@ -60,7 +60,7 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
       $builder->fromPath('entity:node', 'body.0.value')
     );
 
-    $registry->addFieldResolver('Topic', 'image',
+    $registry->addFieldResolver('Topic', 'heroImage',
       $builder->produce('field')
         ->map('entity', $builder->fromParent())
         ->map('field', $builder->fromValue('field_topic_image'))
@@ -71,8 +71,9 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
     );
 
     $registry->addFieldResolver('Topic', 'comments',
-      $builder->produce('social_comments')
+      $builder->produce('query_comments')
         ->map('parent', $builder->fromParent())
+        ->map('bundle', $builder->fromValue('comment'))
         ->map('after', $builder->fromArgument('after'))
         ->map('before', $builder->fromArgument('before'))
         ->map('first', $builder->fromArgument('first'))
@@ -94,13 +95,14 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
       $builder->fromPath('entity:node', 'created.value')
     );
 
-    $registry->addFieldResolver('Topic', 'topicType',
+    $registry->addFieldResolver('Topic', 'type',
       $builder->compose(
         $builder->produce('entity_reference')
           ->map('entity', $builder->fromParent())
           ->map('field', $builder->fromValue('field_topic_type')),
-        $builder->produce('single_entity')
-          ->map('entities', $builder->fromParent())
+        $builder->produce('seek')
+          ->map('input', $builder->fromParent())
+          ->map('position', $builder->fromValue(0))
       )
     );
 
@@ -109,7 +111,7 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('entity', $builder->fromParent())
     );
 
-    $registry->addFieldResolver('TopicType', 'name',
+    $registry->addFieldResolver('TopicType', 'label',
       $builder->produce('entity_label')
         ->map('entity', $builder->fromParent())
     );
@@ -126,7 +128,17 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
   protected function addQueryFields(ResolverRegistryInterface $registry, ResolverBuilder $builder) {
     $registry->addFieldResolver('Query', 'topics',
       $builder->produce('query_topic')
-        ->map('topicType', $builder->fromArgument('topicType'))
+        ->map('after', $builder->fromArgument('after'))
+        ->map('before', $builder->fromArgument('before'))
+        ->map('first', $builder->fromArgument('first'))
+        ->map('last', $builder->fromArgument('last'))
+        ->map('reverse', $builder->fromArgument('reverse'))
+        ->map('sortKey', $builder->fromArgument('sortKey'))
+    );
+
+    $registry->addFieldResolver('Query', 'topicsByType',
+      $builder->produce('query_topic_by_type')
+        ->map('type', $builder->fromArgument('type'))
         ->map('after', $builder->fromArgument('after'))
         ->map('before', $builder->fromArgument('before'))
         ->map('first', $builder->fromArgument('first'))

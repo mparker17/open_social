@@ -166,10 +166,10 @@ class QueryTopicsTest extends SocialGraphQLTestBase {
       'field_content_visibility' => 'public',
       'status' => NodeInterface::NOT_PUBLISHED,
     ]);
-    $this->createNode([
+    $published_topic = $this->createNode([
       'type' => 'topic',
       'field_content_visibility' => 'public',
-      'status' => NodeInterface::NOT_PUBLISHED,
+      'status' => NodeInterface::PUBLISHED,
     ]);
 
     $this->setUpCurrentUser([], ['view node.topic.field_content_visibility:public content']);
@@ -177,6 +177,47 @@ class QueryTopicsTest extends SocialGraphQLTestBase {
     $this->assertResults('
           query {
             topics(last: 3) {
+              nodes {
+                id
+              }
+            }
+          }
+        ',
+      [],
+      [
+        'topics' => [
+          'nodes' => [
+            ['id' => $published_topic->uuid()],
+          ],
+        ],
+      ],
+      $this->defaultCacheMetaData()
+        ->setCacheMaxAge(0)
+        ->addCacheableDependency($published_topic)
+        ->addCacheContexts(['languages:language_interface'])
+    );
+  }
+
+  /**
+   * Test that a user without permission can not see any topics.
+   */
+  public function testAnonymousUserCanNotViewTopicsWithoutPermission() {
+    $this->createNode([
+      'type' => 'topic',
+      'field_content_visibility' => 'public',
+      'status' => NodeInterface::NOT_PUBLISHED,
+    ]);
+    $this->createNode([
+      'type' => 'topic',
+      'field_content_visibility' => 'public',
+      'status' => NodeInterface::PUBLISHED,
+    ]);
+
+    $this->setUpCurrentUser();
+
+    $this->assertResults('
+          query {
+            topics(last: 2) {
               nodes {
                 id
               }

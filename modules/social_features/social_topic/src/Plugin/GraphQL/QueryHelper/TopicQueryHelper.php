@@ -2,9 +2,7 @@
 
 namespace Drupal\social_topic\Plugin\GraphQL\QueryHelper;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
-use Drupal\graphql\GraphQL\Buffers\EntityBuffer;
 use Drupal\node\Entity\Node;
 use Drupal\social_graphql\GraphQL\ConnectionQueryHelperBase;
 use Drupal\social_graphql\Wrappers\Cursor;
@@ -18,51 +16,14 @@ use GraphQL\Executor\Promise\Adapter\SyncPromise;
 class TopicQueryHelper extends ConnectionQueryHelperBase {
 
   /**
-   * The topic type.
-   *
-   * @var string|null
-   */
-  protected ?string $topicType;
-
-  /**
-   * TopicQueryHelper constructor.
-   *
-   * @param string $sort_key
-   *   The key that is used for sorting.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The Drupal entity type manager.
-   * @param \Drupal\graphql\GraphQL\Buffers\EntityBuffer $graphql_entity_buffer
-   *   The GraphQL entity buffer.
-   * @param string|null $topic_type
-   *   The topic type.
-   */
-  public function __construct(string $sort_key, EntityTypeManagerInterface $entity_type_manager, EntityBuffer $graphql_entity_buffer, ?string $topic_type) {
-    parent::__construct($sort_key, $entity_type_manager, $graphql_entity_buffer);
-    $this->topicType = $topic_type;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getQuery(): QueryInterface {
-    $query = $this->entityTypeManager->getStorage('node')
+    return $this->entityTypeManager->getStorage('node')
       ->getQuery()
       ->currentRevision()
       ->accessCheck(TRUE)
       ->condition('type', 'topic');
-
-    if ($this->topicType) {
-      $term_ids = $this->entityTypeManager->getStorage('taxonomy_term')
-        ->getQuery()
-        ->condition('name', $this->topicType)
-        ->execute();
-
-      // We do condition if filter value for topic type is correct, otherwise,
-      // we display an empty array instead of showing all results.
-      $query->condition('field_topic_type', $term_ids ?: [0], 'IN');
-    }
-
-    return $query;
   }
 
   /**
