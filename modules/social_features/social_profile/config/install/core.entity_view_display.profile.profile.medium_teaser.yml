@@ -49,7 +49,9 @@ content:
     settings:
       image_style: medium
       image_link: ''
-    third_party_settings: {  }
+    third_party_settings:
+      lazy:
+        lazy_image: 0
   field_profile_last_name:
     type: string
     weight: 2
