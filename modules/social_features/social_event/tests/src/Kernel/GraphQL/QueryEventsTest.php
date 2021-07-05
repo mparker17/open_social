@@ -57,7 +57,6 @@ class QueryEventsTest extends SocialGraphQLTestBase {
     'group_core_comments',
     'views',
     'group',
-
     'datetime',
     'address',
     'profile',
@@ -171,10 +170,10 @@ class QueryEventsTest extends SocialGraphQLTestBase {
       'field_content_visibility' => 'public',
       'status' => NodeInterface::NOT_PUBLISHED,
     ]);
-    $this->createNode([
+    $published_event = $this->createNode([
       'type' => 'event',
       'field_content_visibility' => 'public',
-      'status' => NodeInterface::NOT_PUBLISHED,
+      'status' => NodeInterface::PUBLISHED,
     ]);
 
     $this->setUpCurrentUser([], ['view node.event.field_content_visibility:public content']);
@@ -182,6 +181,47 @@ class QueryEventsTest extends SocialGraphQLTestBase {
     $this->assertResults('
           query {
             events(last: 3) {
+              nodes {
+                id
+              }
+            }
+          }
+        ',
+      [],
+      [
+        'events' => [
+          'nodes' => [
+            ['id' => $published_event->uuid()],
+          ],
+        ],
+      ],
+      $this->defaultCacheMetaData()
+        ->setCacheMaxAge(0)
+        ->addCacheableDependency($published_event)
+        ->addCacheContexts(['languages:language_interface'])
+    );
+  }
+
+  /**
+   * Test that a user without permission can not see any events.
+   */
+  public function testAnonymousUserCanNotViewEventsWithoutPermission() {
+    $this->createNode([
+      'type' => 'event',
+      'field_content_visibility' => 'public',
+      'status' => NodeInterface::NOT_PUBLISHED,
+    ]);
+    $this->createNode([
+      'type' => 'event',
+      'field_content_visibility' => 'public',
+      'status' => NodeInterface::PUBLISHED,
+    ]);
+
+    $this->setUpCurrentUser();
+
+    $this->assertResults('
+          query {
+            events(last: 2) {
               nodes {
                 id
               }

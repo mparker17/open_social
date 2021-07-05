@@ -3,7 +3,6 @@ extend type Query {
   List of all events on the platform.
 
   Results are limited to what the current viewer has access to.
-  If no limits are specified will limit to 10 results.
   """
   events(
     """Returns the elements that come after the specified cursor."""

@@ -1,7 +1,7 @@
 """
-A event to a piece of content.
+A type of content on Open Social which allows users to organize, discuss topics, and join activities.
 """
-type Event implements Node {
+type Event implements Node & Commentable {
   """
   The unique identifier for the event.
   """
@@ -11,13 +11,13 @@ type Event implements Node {
   """
   title: String!
   """
-  The author of the event or NULL if it was placed anonymously.
+  The author of the event.
   """
   author: Actor
   """
   A hero image for the event.
   """
-  image: Image
+  heroImage: Image
   """
   The message of the event as rendered HTML.
   """
@@ -40,7 +40,6 @@ type Event implements Node {
   List of event managers.
 
   Managers are people who have the rights to edit the event itself.
-  If no limits are specified will limit to 10 results.
   """
   managers(
     """Returns the elements that come after the specified cursor."""
@@ -56,8 +55,6 @@ type Event implements Node {
   ): EventManagerConnection!
   """
   List of event comments.
-
-  If no limits are specified will limit to 10 results.
   """
   comments(
     """Returns the elements that come after the specified cursor."""
@@ -72,7 +69,7 @@ type Event implements Node {
     reverse: Boolean = false
     """Sort the underlying list by the given key."""
     sortKey: CommentSortKeys = CREATED_AT
-  ): EventCommentConnection!
+  ): CommentConnection!
   """
   The url to the event.
   """
@@ -98,25 +95,8 @@ type EventConnection implements Connection {
 The set of valid sort keys for the event query.
 """
 enum EventSortKeys {
-  """Sort by the `created_at` value"""
+  """Sort by event creation date"""
   CREATED_AT
-}
-
-"""
-Information about the comment of a event.
-"""
-type EventCommentEdge implements Edge {
-  cursor: Cursor!
-  node: Comment!
-}
-
-"""
-Pagination info for comments of a event.
-"""
-type EventCommentConnection implements Connection {
-  edges: [EventCommentEdge!]!
-  nodes: [Comment!]!
-  pageInfo: PageInfo!
 }
 
 type EventManagerEdge implements Edge {

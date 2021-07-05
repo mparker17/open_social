@@ -60,7 +60,7 @@ class EventSchemaExtension extends SdlSchemaExtensionPluginBase {
       $builder->fromPath('entity:node', 'body.0.value')
     );
 
-    $registry->addFieldResolver('Event', 'image',
+    $registry->addFieldResolver('Event', 'heroImage',
       $builder->produce('field')
         ->map('entity', $builder->fromParent())
         ->map('field', $builder->fromValue('field_event_image'))
