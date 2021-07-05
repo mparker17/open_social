@@ -86,7 +86,7 @@ class QueryTopicTypesTest extends SocialGraphQLTestBase {
           query {
             topicTypes {
               id
-              name
+              label
             }
           }
         ',
@@ -95,7 +95,7 @@ class QueryTopicTypesTest extends SocialGraphQLTestBase {
         'topicTypes' => [
           [
             'id' => $term->uuid(),
-            'name' => $term->label(),
+            'label' => $term->label(),
           ],
         ],
       ],
