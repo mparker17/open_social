@@ -82,7 +82,19 @@ enum TopicSortKeys {
   CREATED_AT
 }
 
+"""
+The type of a topic.
+
+Each topic is tagged with a topic type to make it clear what this topic is about.
+A topic can be a piece of news, a blogpost, a document, or another type depending on the platform.
+"""
 type TopicType {
+  """
+  The unique identifier for the topic type.
+  """
   id: ID!
+  """
+  The human readable name of the topic type.
+  """
   label: String
 }

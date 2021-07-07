@@ -45,17 +45,12 @@ class TopicQueryByTypeHelper extends ConnectionQueryHelperBase {
    * {@inheritdoc}
    */
   public function getQuery(): QueryInterface {
-    $term_ids = $this->entityTypeManager->getStorage('taxonomy_term')
-      ->getQuery()
-      ->condition('uuid', $this->type)
-      ->execute();
-
     return $this->entityTypeManager->getStorage('node')
       ->getQuery()
       ->currentRevision()
       ->accessCheck(TRUE)
       ->condition('type', 'topic')
-      ->condition('field_topic_type', $term_ids ?: [0], 'IN');
+      ->condition('field_topic_type.0.entity:taxonomy_term.uuid', $this->type);
   }
 
   /**

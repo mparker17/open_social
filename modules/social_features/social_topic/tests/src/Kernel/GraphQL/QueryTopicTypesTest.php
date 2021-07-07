@@ -34,6 +34,7 @@ class QueryTopicTypesTest extends SocialGraphQLTestBase {
     // For the comment functionality.
     'social_comment',
     'comment',
+    // node.type.topic has a configuration dependency on the menu_ui module.
     'menu_ui',
     'entity_access_by_field',
     'options',

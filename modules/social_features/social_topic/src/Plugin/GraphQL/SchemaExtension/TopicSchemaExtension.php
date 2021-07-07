@@ -43,12 +43,8 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
     );
 
     $registry->addFieldResolver('Topic', 'title',
-      $builder->compose(
-        $builder->produce('entity_label')
-          ->map('entity', $builder->fromParent()),
-        $builder->produce('uppercase')
-          ->map('string', $builder->fromParent())
-      )
+      $builder->produce('entity_label')
+        ->map('entity', $builder->fromParent())
     );
 
     $registry->addFieldResolver('Topic', 'author',
@@ -67,7 +63,9 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
     );
 
     $registry->addFieldResolver('Topic', 'created',
-      $builder->fromPath('entity:node', 'created.value')
+      $builder->produce('entity_created')
+        ->map('entity', $builder->fromParent())
+        ->map('format', $builder->fromValue('U'))
     );
 
     $registry->addFieldResolver('Topic', 'comments',
@@ -89,10 +87,6 @@ class TopicSchemaExtension extends SdlSchemaExtensionPluginBase {
         $builder->produce('url_path')
           ->map('url', $builder->fromParent())
       )
-    );
-
-    $registry->addFieldResolver('Topic', 'created',
-      $builder->fromPath('entity:node', 'created.value')
     );
 
     $registry->addFieldResolver('Topic', 'type',

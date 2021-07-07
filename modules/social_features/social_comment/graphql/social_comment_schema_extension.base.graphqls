@@ -1,5 +1,5 @@
 """
-Commentable interface that contains fields that present in the commentable entity.
+Things that can be commented on.
 """
 interface Commentable {
   comments(
